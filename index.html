@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Market place chat, order, payment "><meta charset="UTF-8">
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Full market place "><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
   "imports": {}
 }</script></head><body>
@@ -17,6 +17,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .nav-button.active { background-color: #4f46e5; color: white; }
+        .sub-nav-button.active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
         .modal { background-color: rgba(0,0,0,0.5); }
         .table-container { max-height: 70vh; overflow-y: auto; }
         thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
@@ -141,7 +142,7 @@
         function renderDashboard() {
             const approvedCount = Object.values(products).filter(p => p.status === 'approved').length;
             const pendingCount = Object.values(products).filter(p => p.status === 'pending_approval').length;
-            const completedTransactions = transactions.filter(t => t.status === 'payout_complete' || t.status === 'delivered');
+            const completedTransactions = transactions.filter(t => t.status === 'payout_complete' || t.status === 'delivered' || t.status === 'returned');
             const totalRevenue = completedTransactions.reduce((sum, t) => sum + (parseFloat(t.amountPaid) || 0), 0);
             const totalCommission = completedTransactions.reduce((sum, t) => sum + (parseFloat(t.commission) || 0), 0);
             const openDisputes = transactions.filter(t => t.status === 'dispute_raised').length;
@@ -162,7 +163,15 @@
             const headers = [
                 { title: 'Seller', key: 'sellerName' },
                 { title: 'Product', key: 'title' },
-                { title: 'Status', key: 'status' },
+                { title: 'Status', key: 'status', format: (val) => {
+                    const statusText = (val || '').replace(/_/g, ' ');
+                    let colorClass = 'bg-gray-100 text-gray-800';
+                    if (val === 'sold') colorClass = 'bg-red-100 text-red-800';
+                    else if (val === 'approved') colorClass = 'bg-green-100 text-green-800';
+                    else if (val === 'pending_approval') colorClass = 'bg-yellow-100 text-yellow-800';
+                    else if (val === 'rejected') colorClass = 'bg-slate-200 text-slate-600';
+                    return `<span class="px-2 py-1 text-xs font-semibold rounded-full capitalize ${colorClass}">${statusText}</span>`;
+                }},
                 { title: 'Price', key: 'price', format: val => val ? `₹${val}`: 'N/A' },
                 { title: 'Rent/Day', key: 'rentPrice', format: val => val ? `₹${val}`: 'N/A' },
             ];
@@ -178,6 +187,35 @@
         }
         
         function renderOrders() {
+            appContent.innerHTML = `
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Order Management</h2>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                            <button data-subtab="sale" class="sub-nav-button active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Sale Orders</button>
+                            <button data-subtab="rent" class="sub-nav-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Rent Orders</button>
+                        </nav>
+                    </div>
+                    <div id="orders-content"></div>
+                </div>
+            `;
+
+            document.querySelectorAll('.sub-nav-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.sub-nav-button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    if (e.target.dataset.subtab === 'sale') renderSaleOrders();
+                    else renderRentOrders();
+                });
+            });
+
+            renderSaleOrders(); // Default view
+        }
+
+        function renderSaleOrders() {
+            const saleTransactions = transactions.filter(t => t.type === 'sale' || !t.type); // Backward compatibility
+            const content = document.getElementById('orders-content');
+            
             const headers = [
                 { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
                 { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
@@ -186,61 +224,92 @@
                 { title: 'Amount', key: 'amountPaid', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
                 { title: 'Status', key: 'status', format: val => `<span class="font-semibold capitalize">${(val || '').replace(/_/g, ' ')}</span>` },
             ];
-            
-            appContent.innerHTML = `
-                <div>
-                    <h2 class="text-2xl font-bold mb-4">Order Management (${transactions.length})</h2>
-                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                        <table class="w-full min-w-max">
-                            <thead><tr>
-                                ${headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap">${h.title}</th>`).join('')}
-                                <th class="p-3 text-left text-sm font-semibold whitespace-nowrap">Contact & Actions</th>
-                            </tr></thead>
-                            <tbody>
-                                ${transactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
-                                    const buyerName = customers[t.buyerMobile]?.name || t.buyerMobile;
-                                    const sellerName = customers[t.sellerMobile]?.name || t.sellerMobile;
-                                    const productTitle = products[t.productId]?.title || 'Unknown Item';
 
-                                    const messageForSeller = encodeURIComponent(`Hi ${sellerName}, your item '${productTitle}' has been purchased by ${buyerName}. Please deliver it to the Navrose shop today for pickup. Order ID: ${t.id.slice(-6)}.`);
-                                    const messageForBuyer = encodeURIComponent(`Hi ${buyerName}, regarding your order for '${productTitle}', please coordinate with us for pickup. You can contact us at ${ADMIN_WHATSAPP_NUMBER.replace('91', '')}. Order ID: ${t.id.slice(-6)}.`);
+            content.innerHTML = `
+                <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                    <table class="w-full min-w-max">
+                        <thead><tr>
+                            ${headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap">${h.title}</th>`).join('')}
+                            <th class="p-3 text-left text-sm font-semibold whitespace-nowrap">Contact & Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            ${saleTransactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
+                                const buyerName = customers[t.buyerMobile]?.name || t.buyerMobile;
+                                const sellerName = customers[t.sellerMobile]?.name || t.sellerMobile;
+                                const productTitle = products[t.productId]?.title || 'Unknown Item';
 
-                                    return `
-                                    <tr class="border-b hover:bg-gray-50">
-                                        ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key]) : (t[h.key] || 'N/A')}</td>`).join('')}
-                                        <td class="p-3 text-sm">
-                                            <div class="flex flex-wrap gap-4 items-start">
-                                                <div class="p-2 border rounded-md bg-slate-50">
-                                                    <p class="font-bold text-xs uppercase text-slate-600">Buyer: ${buyerName}</p>
-                                                    <div class="flex items-center gap-2 mt-1">
-                                                        <a href="tel:${t.buyerMobile}" title="Call Buyer" class="text-slate-500 hover:text-indigo-600">${ICONS.phone}</a>
-                                                        <a href="https://wa.me/91${t.buyerMobile}?text=${messageForBuyer}" target="_blank" title="WhatsApp Buyer" class="text-slate-500 hover:text-green-600">${ICONS.whatsapp}</a>
-                                                        <button onclick="openChatModal('${t.buyerMobile}')" title="Chat with Buyer" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
-                                                    </div>
-                                                </div>
-                                                <div class="p-2 border rounded-md bg-slate-50">
-                                                    <p class="font-bold text-xs uppercase text-slate-600">Seller: ${sellerName}</p>
-                                                     <div class="flex items-center gap-2 mt-1">
-                                                        <a href="tel:${t.sellerMobile}" title="Call Seller" class="text-slate-500 hover:text-indigo-600">${ICONS.phone}</a>
-                                                        <a href="https://wa.me/91${t.sellerMobile}?text=${messageForSeller}" target="_blank" title="WhatsApp Seller" class="text-slate-500 hover:text-green-600">${ICONS.whatsapp}</a>
-                                                        <button onclick="openChatModal('${t.sellerMobile}')" title="Chat with Seller" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
-                                                    </div>
-                                                </div>
-                                                <div class="p-2">
-                                                    <p class="font-bold text-xs uppercase text-slate-600">Order</p>
-                                                    <div class="flex flex-col items-start gap-1 mt-1">
-                                                         <button onclick="handleAction('Edit_Status', '${t.id}')" class="text-xs font-semibold text-indigo-600 hover:underline">Edit Status</button>
-                                                         <button onclick="handleAction('Delete', '${t.id}')" class="text-xs font-semibold text-red-600 hover:underline">Delete</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    `
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                                return `
+                                <tr class="border-b hover:bg-gray-50">
+                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key]) : (t[h.key] || 'N/A')}</td>`).join('')}
+                                    <td class="p-3 text-sm flex gap-2">
+                                        <button onclick="openChatModal('${t.buyerMobile}')" title="Chat Buyer" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
+                                        <button onclick="handleAction('Edit_Status', '${t.id}')" class="text-xs font-semibold text-indigo-600 hover:underline">Edit Status</button>
+                                    </td>
+                                </tr>
+                                `
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderRentOrders() {
+            const rentTransactions = transactions.filter(t => t.type === 'rent');
+            const content = document.getElementById('orders-content');
+
+            content.innerHTML = `
+                <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                    <table class="w-full min-w-max">
+                        <thead><tr>
+                            <th class="p-3 text-left text-sm font-semibold">Date</th>
+                            <th class="p-3 text-left text-sm font-semibold">Product</th>
+                            <th class="p-3 text-left text-sm font-semibold">Renter</th>
+                            <th class="p-3 text-left text-sm font-semibold">Duration</th>
+                            <th class="p-3 text-left text-sm font-semibold">Due Date</th>
+                            <th class="p-3 text-left text-sm font-semibold">Status</th>
+                            <th class="p-3 text-left text-sm font-semibold">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            ${rentTransactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
+                                const startDate = new Date(t.timestamp);
+                                const dueDate = new Date(startDate);
+                                dueDate.setDate(startDate.getDate() + t.rentalDays);
+                                const now = new Date();
+                                const diffTime = dueDate - now;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                
+                                let statusText, statusColor;
+                                if (t.status === 'returned') {
+                                    statusText = 'Returned';
+                                    statusColor = 'text-green-600';
+                                } else if (diffDays > 0) {
+                                    statusText = `Due in ${diffDays} day(s)`;
+                                    statusColor = 'text-blue-600';
+                                } else if (diffDays === 0) {
+                                    statusText = 'Due today';
+                                    statusColor = 'text-amber-600';
+                                } else {
+                                    statusText = `Overdue by ${Math.abs(diffDays)} day(s)`;
+                                    statusColor = 'text-red-600 font-bold';
+                                }
+
+                                return `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="p-3 text-sm">${startDate.toLocaleDateString()}</td>
+                                    <td class="p-3 text-sm">${products[t.productId]?.title || 'Unknown'}</td>
+                                    <td class="p-3 text-sm">${customers[t.buyerMobile]?.name || t.buyerMobile}</td>
+                                    <td class="p-3 text-sm">${t.rentalDays} day(s)</td>
+                                    <td class="p-3 text-sm">${dueDate.toLocaleDateString()}</td>
+                                    <td class="p-3 text-sm font-semibold ${statusColor}">${statusText}</td>
+                                    <td class="p-3 text-sm">
+                                        ${t.status !== 'returned' ? `<button onclick="handleAction('Mark_Returned', '${t.id}')" class="font-semibold text-green-600 hover:underline">Mark Returned</button>` : ''}
+                                    </td>
+                                </tr>
+                                `
+                            }).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
         }
@@ -397,6 +466,11 @@
                     await db.ref(`transactions/${id}`).update({ status: 'payout_complete' });
                     showToast('Transaction marked as paid.');
                 }
+            } else if (action.includes('mark_returned')) {
+                 if (confirm("Mark this rental as returned?")) {
+                    await db.ref(`transactions/${id}`).update({ status: 'returned' });
+                    showToast('Rental marked as returned.');
+                }
             }
         }
         window.handleAction = handleAction;
@@ -404,7 +478,7 @@
         function openEditStatusModal(transaction) {
             const modal = document.getElementById('edit-modal');
             const content = document.getElementById('edit-modal-content');
-            const statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'dispute_raised', 'payout_complete'];
+            const statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'dispute_raised', 'payout_complete', 'rented_out', 'returned'];
             content.innerHTML = `
                 <h3 class="font-bold text-lg mb-4">Update Status for Order #${transaction.id.slice(-6)}</h3>
                 <select id="status-select" class="w-full p-2 border rounded">
