@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Market place chat, order, payment "><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
+  "imports": {}
+}</script></head><body>
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace Admin - Navrose Stitching Point</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .nav-button.active { background-color: #4f46e5; color: white; }
+        .modal { background-color: rgba(0,0,0,0.5); }
+        .table-container { max-height: 70vh; overflow-y: auto; }
+        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
+        .sortable-header { cursor: pointer; user-select: none; }
+        .sortable-header.sort-asc::after { content: ' ▲'; }
+        .sortable-header.sort-desc::after { content: ' ▼'; }
+        .chat-bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; }
+        .chat-bubble.sent { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
+        .chat-bubble.received { background-color: #4f46e5; color: white; align-self: flex-end; }
+    </style>
+
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-slate-800">Marketplace Admin</h1>
+            <div class="flex items-center gap-4">
+                <div id="admin-chat-icon-container" class="relative">
+                    <button id="chat-icon-btn" class="text-slate-600 hover:text-indigo-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        <span id="chat-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+                    </button>
+                </div>
+                <div id="admin-notification-bell-container" class="relative">
+                    <button id="notification-icon-btn" class="text-slate-600 hover:text-indigo-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+                    </button>
+                    <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl p-2 hidden z-20 border max-h-96 overflow-y-auto"></div>
+                </div>
+                <a href="index.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">← Back to Main App</a>
+            </div>
+        </header>
+
+        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+            <button id="tab-dashboard" class="nav-button active py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Dashboard</button>
+            <button id="tab-listings" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Listings</button>
+            <button id="tab-orders" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Order Management</button>
+            <button id="tab-payments" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Payment Management</button>
+            <button id="tab-support" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Support &amp; Disputes</button>
+        </div>
+
+        <main id="app-content"></main>
+    </div>
+
+    <!-- Modals -->
+    <div id="item-detail-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal p-4">
+        <div id="item-detail-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"></div>
+    </div>
+    <div id="chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal p-4">
+        <div id="chat-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-[80vh]">
+            <!-- Chat content will be rendered here -->
+        </div>
+    </div>
+    <div id="edit-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal p-4">
+         <div id="edit-modal-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md"></div>
+    </div>
+
+     <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0_DQIiyaVQllFH4pxH1Dm3r2kFXXoOgc",
+            authDomain: "navrosetailorapp.firebaseapp.com",
+            databaseURL: "https://navrosetailorapp-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "navrosetailorapp",
+            storageBucket: "navrosetailorapp.firebasestorage.app",
+        };
+
+        let db;
+        let products = {}, transactions = [], chats = {}, customers = {};
+        let adminNotifications = [];
+        let unreadAdminNotifications = 0;
+        let unreadChats = new Set();
+        const ADMIN_MOBILE = "0000000000"; // Admin's own mobile number to identify sent messages
+        const ADMIN_WHATSAPP_NUMBER = "917696272780";
+
+        const ICONS = {
+            phone: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>`,
+            whatsapp: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z M12 5.583c.365 0 .703.111 1.002.316l.11.063c.27.185.27.516.035.797l-2.455 4.095c-.236.394-.099.811.306 1.018l.112.054c.48.243.987.362 1.553.362.593 0 1.192-.128 1.776-.39l.114-.05c.345-.165.732.14.595.53l-1.264 3.447c-.137.39-.56.632-.99.533l-.116-.023c-1.003-.19-1.958-.613-2.813-1.258l-.092-.063c-.855-.645-1.523-1.476-1.95-2.435l-.048-.113c-.237-.563.264-1.08.872-1.042l.115.006c.48.023.935.165 1.348.42l.09.048c.305.165.65.048.797-.264l1.18-2.455c.148-.318.048-.714-.249-.888l-.092-.048c-.287-.156-.593-.243-.913-.243-.332 0-.655.086-.948.243l-.09.056c-.33.208-.768.035-.872-.345l-.27-1.13c-.104-.428.165-.833.595-.913l.116-.023c.332-.063.67-.094 1.018-.094z"/></svg>`,
+            chat: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd" /></svg>`
+        };
+
+        const appContent = document.getElementById('app-content');
+        const tabs = document.querySelectorAll('.nav-button');
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        const getGoogleDriveImageUrl = (sharingUrl) => {
+            if (!sharingUrl || !sharingUrl.includes('drive.google.com')) {
+                return sharingUrl || 'https://via.placeholder.com/150x100.png?text=No+Image';
+            }
+            const fileIdMatch = sharingUrl.match(/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (fileIdMatch && fileIdMatch[1]) {
+                const fileId = fileIdMatch[1];
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+            return 'https://via.placeholder.com/150x100.png?text=Invalid+Link';
+        };
+        
+        const renderFunctions = {
+            dashboard: renderDashboard,
+            listings: renderListings,
+            orders: renderOrders,
+            payments: renderPayments,
+            support: renderSupport
+        };
+
+        function switchView(viewName) {
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.id === `tab-${viewName}`);
+            });
+            renderFunctions[viewName]();
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderDashboard() {
+            const approvedCount = Object.values(products).filter(p => p.status === 'approved').length;
+            const pendingCount = Object.values(products).filter(p => p.status === 'pending_approval').length;
+            const completedTransactions = transactions.filter(t => t.status === 'payout_complete' || t.status === 'delivered');
+            const totalRevenue = completedTransactions.reduce((sum, t) => sum + (parseFloat(t.amountPaid) || 0), 0);
+            const totalCommission = completedTransactions.reduce((sum, t) => sum + (parseFloat(t.commission) || 0), 0);
+            const openDisputes = transactions.filter(t => t.status === 'dispute_raised').length;
+
+            appContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Active Listings</h3><p class="text-3xl font-bold mt-2">${approvedCount}</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Pending Approval</h3><p class="text-3xl font-bold mt-2 text-yellow-600">${pendingCount}</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Total Revenue</h3><p class="text-3xl font-bold mt-2">₹${totalRevenue.toFixed(2)}</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Commission Earned</h3><p class="text-3xl font-bold mt-2 text-green-600">₹${totalCommission.toFixed(2)}</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Open Disputes</h3><p class="text-3xl font-bold mt-2 text-red-600">${openDisputes}</p></div>
+                </div>
+            `;
+        }
+
+        function renderListings() {
+            const productList = Object.values(products);
+            const headers = [
+                { title: 'Seller', key: 'sellerName' },
+                { title: 'Product', key: 'title' },
+                { title: 'Status', key: 'status' },
+                { title: 'Price', key: 'price', format: val => val ? `₹${val}`: 'N/A' },
+                { title: 'Rent/Day', key: 'rentPrice', format: val => val ? `₹${val}`: 'N/A' },
+            ];
+            const actions = ['Details', 'Approve', 'Reject', 'Delete'];
+            appContent.innerHTML = `
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Manage Listings (${productList.length})</h2>
+                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                        ${createTable(productList, headers, actions, {grandTotalCols: ['price', 'rentPrice']})}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderOrders() {
+            const headers = [
+                { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
+                { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
+                { title: 'Buyer', key: 'buyerMobile', format: mob => customers[mob]?.name || mob },
+                { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
+                { title: 'Amount', key: 'amountPaid', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
+                { title: 'Status', key: 'status', format: val => `<span class="font-semibold capitalize">${(val || '').replace(/_/g, ' ')}</span>` },
+            ];
+            
+            appContent.innerHTML = `
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Order Management (${transactions.length})</h2>
+                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                        <table class="w-full min-w-max">
+                            <thead><tr>
+                                ${headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap">${h.title}</th>`).join('')}
+                                <th class="p-3 text-left text-sm font-semibold whitespace-nowrap">Contact & Actions</th>
+                            </tr></thead>
+                            <tbody>
+                                ${transactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
+                                    const buyerName = customers[t.buyerMobile]?.name || t.buyerMobile;
+                                    const sellerName = customers[t.sellerMobile]?.name || t.sellerMobile;
+                                    const productTitle = products[t.productId]?.title || 'Unknown Item';
+
+                                    const messageForSeller = encodeURIComponent(`Hi ${sellerName}, your item '${productTitle}' has been purchased by ${buyerName}. Please deliver it to the Navrose shop today for pickup. Order ID: ${t.id.slice(-6)}.`);
+                                    const messageForBuyer = encodeURIComponent(`Hi ${buyerName}, regarding your order for '${productTitle}', please coordinate with us for pickup. You can contact us at ${ADMIN_WHATSAPP_NUMBER.replace('91', '')}. Order ID: ${t.id.slice(-6)}.`);
+
+                                    return `
+                                    <tr class="border-b hover:bg-gray-50">
+                                        ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key]) : (t[h.key] || 'N/A')}</td>`).join('')}
+                                        <td class="p-3 text-sm">
+                                            <div class="flex flex-wrap gap-4 items-start">
+                                                <div class="p-2 border rounded-md bg-slate-50">
+                                                    <p class="font-bold text-xs uppercase text-slate-600">Buyer: ${buyerName}</p>
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <a href="tel:${t.buyerMobile}" title="Call Buyer" class="text-slate-500 hover:text-indigo-600">${ICONS.phone}</a>
+                                                        <a href="https://wa.me/91${t.buyerMobile}?text=${messageForBuyer}" target="_blank" title="WhatsApp Buyer" class="text-slate-500 hover:text-green-600">${ICONS.whatsapp}</a>
+                                                        <button onclick="openChatModal('${t.buyerMobile}')" title="Chat with Buyer" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2 border rounded-md bg-slate-50">
+                                                    <p class="font-bold text-xs uppercase text-slate-600">Seller: ${sellerName}</p>
+                                                     <div class="flex items-center gap-2 mt-1">
+                                                        <a href="tel:${t.sellerMobile}" title="Call Seller" class="text-slate-500 hover:text-indigo-600">${ICONS.phone}</a>
+                                                        <a href="https://wa.me/91${t.sellerMobile}?text=${messageForSeller}" target="_blank" title="WhatsApp Seller" class="text-slate-500 hover:text-green-600">${ICONS.whatsapp}</a>
+                                                        <button onclick="openChatModal('${t.sellerMobile}')" title="Chat with Seller" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2">
+                                                    <p class="font-bold text-xs uppercase text-slate-600">Order</p>
+                                                    <div class="flex flex-col items-start gap-1 mt-1">
+                                                         <button onclick="handleAction('Edit_Status', '${t.id}')" class="text-xs font-semibold text-indigo-600 hover:underline">Edit Status</button>
+                                                         <button onclick="handleAction('Delete', '${t.id}')" class="text-xs font-semibold text-red-600 hover:underline">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    `
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderPayments() {
+            const payoutTransactions = transactions; // Show all transactions
+            const headers = [
+                { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
+                { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
+                { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
+                { title: 'Sale Amount', key: 'amountPaid', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
+                { title: 'Commission', key: 'commission', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
+                { title: 'Net Payout', key: 'netPayout', format: (val, item) => `₹${( (parseFloat(item.amountPaid) || 0) - (parseFloat(item.commission) || 0) ).toFixed(2)}`},
+                { title: 'Status', key: 'status', format: val => `<span class="font-semibold capitalize">${(val || '').replace(/_/g, ' ')}</span>` },
+            ];
+             const actions = ['Mark Paid', 'View Details'];
+             appContent.innerHTML = `
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Payment Management</h2>
+                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                         ${createTable(payoutTransactions, headers, actions, {grandTotalCols: ['amountPaid', 'commission', 'netPayout']})}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSupport() {
+            const disputed = transactions.filter(t => t.status === 'dispute_raised');
+            const headers = [
+                { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
+                { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
+                { title: 'Buyer', key: 'buyerMobile', format: mob => customers[mob]?.name || mob },
+                { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
+            ];
+             appContent.innerHTML = `
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Support & Disputes (${disputed.length})</h2>
+                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                        <table class="w-full min-w-max">
+                            <thead><tr>
+                                ${headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap">${h.title}</th>`).join('')}
+                                <th class="p-3 text-left text-sm font-semibold whitespace-nowrap">Actions</th>
+                            </tr></thead>
+                            <tbody>
+                            ${disputed.map(t => `
+                                <tr class="border-b hover:bg-gray-50">
+                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key]) : (t[h.key] || 'N/A')}</td>`).join('')}
+                                    <td class="p-3 text-sm flex gap-4">
+                                        <button onclick="openChatModal('${t.buyerMobile}')" class="font-semibold text-indigo-600 hover:underline">Chat Buyer</button>
+                                        <button onclick="openChatModal('${t.sellerMobile}')" class="font-semibold text-indigo-600 hover:underline">Chat Seller</button>
+                                        <button onclick="handleAction('Resolve_Dispute', '${t.id}')" class="font-semibold text-green-600 hover:underline">Resolve</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TABLE HELPER ---
+        function createTable(data, headers, actions, options = {}) {
+            if (data.length === 0) return '<p class="text-center p-8 text-gray-500">No items to display.</p>';
+            
+            const grandTotals = {};
+            if (options.grandTotalCols) {
+                options.grandTotalCols.forEach(key => grandTotals[key] = 0);
+            }
+
+            const headerHtml = headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap sortable-header" onclick="alert('Sorting to be implemented')">${h.title}</th>`).join('');
+            
+            const bodyHtml = data.map(item => {
+                const rowData = headers.map(h => {
+                    let value = item[h.key];
+                    if (h.key.includes('.')) { // handle nested keys like item.details.price
+                        value = h.key.split('.').reduce((o, i) => o?.[i], item);
+                    }
+                    if (h.format) value = h.format(value, item);
+                    else value = value || 'N/A';
+
+                    // Update totals
+                    if (options.grandTotalCols?.includes(h.key)) {
+                        grandTotals[h.key] += parseFloat(item[h.key] || 0);
+                    } else if (options.grandTotalCols?.includes(h.key) && h.key === 'netPayout') {
+                        grandTotals.netPayout += ( (parseFloat(item.amountPaid) || 0) - (parseFloat(item.commission) || 0) );
+                    }
+
+                    return `<td class="p-3 text-sm whitespace-nowrap">${value}</td>`;
+                }).join('');
+
+                return `
+                <tr class="border-b hover:bg-gray-50">
+                    ${rowData}
+                    <td class="p-3 text-sm flex gap-2 whitespace-nowrap">
+                        ${actions.map(action => `<button class="font-semibold text-indigo-600 hover:underline" onclick="handleAction('${action.replace(/\s/g, '_')}', '${item.id}')">${action}</button>`).join('')}
+                    </td>
+                </tr>
+            `}).join('');
+            
+            const footerHtml = options.grandTotalCols ? `
+                <tfoot class="bg-slate-100 font-bold">
+                    <tr>
+                        ${headers.map(h => {
+                            if (options.grandTotalCols.includes(h.key)) {
+                                let total = grandTotals[h.key];
+                                return `<td class="p-3 text-sm text-right">₹${total.toFixed(2)}</td>`;
+                            } else if (options.grandTotalCols.includes(h.key) && h.key === 'netPayout') {
+                                let total = (grandTotals.amountPaid || 0) - (grandTotals.commission || 0);
+                                return `<td class="p-3 text-sm text-right">₹${total.toFixed(2)}</td>`;
+                            }
+                            return `<td class="p-3"></td>`;
+                        }).join('')}
+                        <td class="p-3"></td>
+                    </tr>
+                </tfoot>
+            ` : '';
+
+            return `<table class="w-full min-w-max"><thead><tr>${headerHtml}<th>Actions</th></tr></thead><tbody>${bodyHtml}</tbody>${footerHtml}</table>`;
+        }
+
+
+        // --- ACTION HANDLER ---
+        async function handleAction(action, id) {
+            action = action.toLowerCase();
+            if (action.includes('approve')) {
+                await db.ref(`marketplaceProducts/${id}`).update({ status: 'approved' });
+                showToast('Listing approved.');
+            } else if (action.includes('reject')) {
+                await db.ref(`marketplaceProducts/${id}`).update({ status: 'rejected' });
+                showToast('Listing rejected.');
+            } else if (action.includes('delete')) {
+                 if (confirm("Are you sure you want to delete this item? This cannot be undone.")) {
+                    const product = products[id];
+                    const transaction = transactions.find(t => t.id === id);
+                    if (product) await db.ref(`marketplaceProducts/${id}`).remove();
+                    if (transaction) await db.ref(`transactions/${id}`).remove();
+                    showToast('Item deleted.');
+                }
+            } else if (action.includes('details')) {
+                const product = products[id];
+                const transaction = transactions.find(t => t.id === id);
+                if(product) showItemDetails(product);
+                else if(transaction) showItemDetails(products[transaction.productId]);
+                else showToast('Details not found');
+            } else if (action.includes('edit_status')) {
+                const transaction = transactions.find(t => t.id === id);
+                if(transaction) openEditStatusModal(transaction);
+            } else if (action.includes('resolve_dispute')) {
+                const transaction = transactions.find(t => t.id === id);
+                if(transaction) openResolveDisputeModal(transaction);
+            } else if (action.includes('mark_paid')) {
+                 if (confirm("Mark this transaction as paid out to the seller?")) {
+                    await db.ref(`transactions/${id}`).update({ status: 'payout_complete' });
+                    showToast('Transaction marked as paid.');
+                }
+            }
+        }
+        window.handleAction = handleAction;
+        
+        function openEditStatusModal(transaction) {
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+            const statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'dispute_raised', 'payout_complete'];
+            content.innerHTML = `
+                <h3 class="font-bold text-lg mb-4">Update Status for Order #${transaction.id.slice(-6)}</h3>
+                <select id="status-select" class="w-full p-2 border rounded">
+                    ${statuses.map(s => `<option value="${s}" ${s === transaction.status ? 'selected' : ''}>${s.replace(/_/g, ' ').toUpperCase()}</option>`).join('')}
+                </select>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button onclick="document.getElementById('edit-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded font-semibold">Cancel</button>
+                    <button onclick="updateTransactionStatus('${transaction.id}')" class="bg-indigo-600 text-white py-2 px-4 rounded font-semibold">Save</button>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+        
+        async function updateTransactionStatus(id) {
+            const newStatus = document.getElementById('status-select').value;
+            await db.ref(`transactions/${id}`).update({ status: newStatus });
+            showToast('Status updated.');
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+        window.updateTransactionStatus = updateTransactionStatus;
+
+        function showItemDetails(product) {
+            const modal = document.getElementById('item-detail-modal');
+            const content = document.getElementById('item-detail-content');
+            const imageUrl = getGoogleDriveImageUrl(product.imageUrl);
+            content.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xl font-bold">${product.title}</h3>
+                    <span class="text-sm font-semibold px-3 py-1 rounded-full ${product.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${product.status}</span>
+                </div>
+                <img src="${imageUrl}" class="w-full h-64 object-cover my-4 rounded-lg bg-gray-100">
+                <div class="space-y-2 text-sm">
+                    <p><strong>Seller:</strong> ${product.sellerName} (${product.sellerMobile})</p>
+                    <p><strong>Listing Type:</strong> <span class="font-semibold">${product.listingType?.charAt(0).toUpperCase() + product.listingType?.slice(1)}</span></p>
+                    ${(product.listingType === 'sale' || product.listingType === 'both') ? `<p><strong>Sale Price:</strong> ₹${product.price || 'N/A'}</p>` : ''}
+                    ${(product.listingType === 'rent' || product.listingType === 'both') ? `<p><strong>Rent/Day:</strong> ₹${product.rentPrice || 'N/A'}</p>` : ''}
+                    ${(product.listingType === 'rent' || product.listingType === 'both') ? `<p><strong>Security Deposit:</strong> ₹${product.securityDeposit || 'N/A'}</p>` : ''}
+                    <p><strong>Description:</strong> ${product.description}</p>
+                </div>
+                <div class="text-right mt-6">
+                    <button onclick="document.getElementById('item-detail-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded-lg font-semibold">Close</button>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        // --- NOTIFICATIONS & CHAT ---
+        function updateAdminNotificationBadge() {
+            const badge = document.getElementById('notification-badge');
+            badge.textContent = unreadAdminNotifications;
+            badge.classList.toggle('hidden', unreadAdminNotifications === 0);
+        }
+
+        function renderAdminNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            if (adminNotifications.length === 0) {
+                dropdown.innerHTML = `<p class="p-4 text-center text-sm text-gray-500">No new notifications.</p>`;
+                return;
+            }
+            dropdown.innerHTML = adminNotifications.map(n => `
+                <div class="p-3 border-b text-sm cursor-pointer hover:bg-slate-50">
+                    <p class="font-semibold">${n.text}</p>
+                    <p class="text-xs text-slate-500">From: ${n.fromName || n.from}</p>
+                </div>
+            `).join('');
+        }
+        
+        function updateAdminChatBadge() {
+            const badge = document.getElementById('chat-badge');
+            badge.textContent = unreadChats.size;
+            badge.classList.toggle('hidden', unreadChats.size === 0);
+        }
+
+        async function sendMessageToUser(chatId, text, recipientMobile) {
+            if (!db) {
+                showToast("Database not connected.");
+                return;
+            }
+            const messagesRef = db.ref(`chats/${chatId}/messages`);
+            try {
+                await messagesRef.push({
+                    text: text,
+                    sender: ADMIN_MOBILE,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                // Also send a notification to the client
+                const clientNotifRef = db.ref(`clientNotifications/${recipientMobile}`).push();
+                await clientNotifRef.set({
+                    title: 'New Message from Admin',
+                    body: text,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                console.log(`Message sent and notification pushed to ${recipientMobile}`);
+            } catch (error) {
+                console.error("Error sending message:", error);
+                showToast("Failed to send message.");
+            }
+        }
+
+        function openChatModal(userMobile) {
+            const modal = document.getElementById('chat-modal');
+            const content = document.getElementById('chat-modal-content');
+            const chatId = [userMobile, ADMIN_MOBILE].sort().join('_');
+            const chatMessages = chats[chatId] ? Object.values(chats[chatId].messages).sort((a,b) => a.timestamp - b.timestamp) : [];
+
+            content.innerHTML = `
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="text-xl font-bold">Chat with ${customers[userMobile]?.name || userMobile}</h3>
+                    <button onclick="document.getElementById('chat-modal').style.display='none'" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                </div>
+                <div id="chat-history-messages" class="flex-grow overflow-y-auto bg-gray-100 p-4 space-y-2 flex flex-col">
+                    ${chatMessages.map(msg => `
+                        <div class="chat-bubble p-2 rounded-lg ${msg.sender === ADMIN_MOBILE ? 'sent' : 'received'}">
+                            <p>${msg.text}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <form id="admin-chat-form" class="p-4 border-t flex gap-2">
+                    <input type="text" id="admin-chat-input" class="w-full border rounded-full px-4 py-2" placeholder="Type a message..." required autocomplete="off">
+                    <button type="submit" class="bg-indigo-600 text-white rounded-full p-2 w-10 h-10 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+                    </button>
+                </form>
+            `;
+            modal.style.display = 'flex';
+            const chatHistory = document.getElementById('chat-history-messages');
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            
+            // Mark as read
+            unreadChats.delete(chatId);
+            updateAdminChatBadge();
+
+            document.getElementById('admin-chat-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const input = document.getElementById('admin-chat-input');
+                const text = input.value.trim();
+                if (text) {
+                    sendMessageToUser(chatId, text, userMobile);
+                    input.value = '';
+                }
+            });
+        }
+        window.openChatModal = openChatModal;
+
+
+        function openChatList() {
+             const modal = document.getElementById('chat-modal');
+             const content = document.getElementById('chat-modal-content');
+             const chatEntries = Object.entries(chats);
+
+             content.innerHTML = `
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="text-xl font-bold">Conversations</h3>
+                    <button onclick="document.getElementById('chat-modal').style.display='none'" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                </div>
+                <div class="overflow-y-auto">
+                    ${chatEntries.length > 0 ? chatEntries.map(([chatId, chatData]) => {
+                        const userMobile = chatId.replace(ADMIN_MOBILE, '').replace('_', '');
+                        const lastMsg = Object.values(chatData.messages || {}).sort((a,b) => b.timestamp - a.timestamp)[0];
+                        return `
+                        <div onclick="openChatModal('${userMobile}')" class="p-4 border-b hover:bg-slate-50 cursor-pointer ${unreadChats.has(chatId) ? 'font-bold' : ''}">
+                            <p>${customers[userMobile]?.name || userMobile}</p>
+                            <p class="text-sm text-slate-500 truncate">${lastMsg ? lastMsg.text : 'No messages yet'}</p>
+                        </div>
+                        `
+                    }).join('') : '<p class="p-8 text-center text-slate-500">No conversations yet.</p>'}
+                </div>
+             `;
+             modal.style.display = 'flex';
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+            } catch(e) { console.error(e); alert("Firebase connection failed."); }
+
+            tabs.forEach(tab => tab.addEventListener('click', () => switchView(tab.id.replace('tab-', ''))));
+            
+            const dataRefs = {
+                marketplaceProducts: (snap) => { products = snap.val() || {}; },
+                transactions: (snap) => { transactions = Object.values(snap.val() || {}); },
+                customers: (snap) => {
+                    const customerList = Object.values(snap.val() || {});
+                    customers = customerList.reduce((obj, c) => { if(c.mobile) obj[c.mobile] = c; return obj; }, {});
+                },
+                adminNotifications: (snap) => {
+                    adminNotifications = Object.values(snap.val() || {}).sort((a,b) => b.timestamp - a.timestamp);
+                    unreadAdminNotifications = adminNotifications.length; // Simple count for now
+                    updateAdminNotificationBadge();
+                    renderAdminNotifications();
+                },
+                chats: (snap) => {
+                    chats = snap.val() || {};
+                    unreadChats.clear();
+                    Object.entries(chats).forEach(([chatId, chatData]) => {
+                        const lastMsg = Object.values(chatData.messages || {}).sort((a,b) => b.timestamp - a.timestamp)[0];
+                        if (lastMsg && lastMsg.sender !== ADMIN_MOBILE) {
+                            // In a real app, you'd check a "lastRead" timestamp
+                            unreadChats.add(chatId);
+                        }
+                    });
+                    updateAdminChatBadge();
+                }
+            };
+            
+            Object.entries(dataRefs).forEach(([refName, callback]) => {
+                db.ref(refName).on('value', snap => {
+                    callback(snap);
+                    const activeView = document.querySelector('.nav-button.active')?.id.replace('tab-','');
+                    if (activeView && renderFunctions[activeView]) {
+                        renderFunctions[activeView]();
+                    }
+                });
+            });
+
+            document.getElementById('notification-icon-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('notification-dropdown').classList.toggle('hidden');
+                unreadAdminNotifications = 0; // Mark as read on open
+                updateAdminNotificationBadge();
+            });
+
+            document.getElementById('chat-icon-btn').addEventListener('click', openChatList);
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#admin-notification-bell-container')) {
+                     document.getElementById('notification-dropdown').classList.add('hidden');
+                }
+            });
+
+
+            switchView('dashboard');
+        });
+    </script>
+
+
+<script src="./script.js"></script></body></html>
