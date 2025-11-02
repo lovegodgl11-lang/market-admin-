@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Listing, ledger, search "><meta charset="UTF-8">
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Update market </title><meta name="title" content="Update market "><meta name="description" content="Nav"><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
   "imports": {}
 }</script></head><body>
@@ -9,135 +9,162 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketplace Admin - Navrose Stitching Point</title>
+    <title>Customer Portal - Navrose Stitching Point</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .nav-button.active { background-color: #4f46e5; color: white; }
-        .sub-nav-button.active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .tab-btn.active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff;}
+        .list-form-tab-btn.active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff;}
+        .product-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
         .modal { background-color: rgba(0,0,0,0.5); }
-        .table-container { max-height: 70vh; overflow-y: auto; }
-        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
-        .sortable-header { cursor: pointer; user-select: none; position: relative; padding-right: 20px; }
-        .sortable-header::after {
-            content: ' '; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-            width: 1em; height: 1em; opacity: 0.4;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41zm255-105L177 64c-9.4-9.4-24.6-9.4-33.9 0L24 183c-15.1-15.1-4.4-41 17-41h238c21.4 0 32.1 25.9 17-41z'/%3E%3C/svg%3E");
-            background-size: contain; background-repeat: no-repeat;
-        }
-        .sortable-header.sort-asc::after {
-            opacity: 1;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M279 224H41c-21.4 0-32.1-25.9-17-41L143 64c9.4-9.4 24.6-9.4 33.9 0l119 119c15.2 15.1 4.5 41-16.9 41z'/%3E%3C/svg%3E");
-        }
-        .sortable-header.sort-desc::after {
-            opacity: 1;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41z'/%3E%3C/svg%3E");
-        }
+        .hidden-form-field { display: none; }
+        
+        /* New Styles */
+        .notification-dropdown { max-height: 80vh; }
+        .chat-modal { max-height: 80vh; }
         .chat-bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; }
-        .chat-bubble.sent { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
-        .chat-bubble.received { background-color: #4f46e5; color: white; align-self: flex-end; }
-        .form-input, .form-select, .form-textarea { border-color: #d1d5db; border-radius: 0.375rem; padding: 0.5rem 0.75rem; width: 100%; }
-        @media print {
-            body { padding: 1rem !important; background-color: #fff !important; }
-            .no-print, nav, header, .modal { display: none !important; }
-            main { padding: 0 !important; }
-            .print-area { box-shadow: none !important; border: none !important; }
-            .table-container { max-height: none !important; overflow: visible !important; border: none !important; }
-        }
+        .chat-bubble.sent { background-color: #4f46e5; color: white; align-self: flex-end; }
+        .chat-bubble.received { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
     </style>
 
 
-    <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-6 no-print">
-            <h1 class="text-3xl font-bold text-slate-800">Marketplace Admin</h1>
-            <div class="flex-grow max-w-lg mx-4 relative">
-                <input type="search" id="global-admin-search" placeholder="Search products, customers, orders..." class="w-full pl-10 pr-4 py-2 border rounded-full bg-slate-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+    <div id="login-view" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-sm mx-auto bg-white p-8 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-bold text-center mb-2">Customer Portal</h2>
+            <p class="text-center text-gray-600 mb-6">Enter your mobile number to view your orders and use the marketplace.</p>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="mobile-number" class="block text-sm font-medium text-gray-700">Mobile Number</label>
+                    <input type="tel" id="mobile-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required="" placeholder="e.g., 9876543210">
                 </div>
-            </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 font-semibold">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-view" class="hidden w-full max-w-4xl mx-auto p-4">
+        <header class="flex justify-between items-center mb-4 border-b pb-4">
+            <h1 class="text-xl font-bold">Welcome, <span id="customer-name-display"></span>!</h1>
             <div class="flex items-center gap-4">
-                <div id="admin-chat-icon-container" class="relative">
-                    <button id="chat-icon-btn" class="text-slate-600 hover:text-indigo-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                        <span id="chat-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
-                    </button>
-                </div>
-                <div id="admin-notification-bell-container" class="relative">
-                    <button id="notification-icon-btn" class="text-slate-600 hover:text-indigo-600">
+                <button id="cart-btn" class="relative text-gray-600 hover:text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+                </button>
+                <button id="voice-toggle-btn" class="text-gray-600 hover:text-indigo-600" title="Toggle Sound Notifications">
+                    <!-- Speaker Icon (will be toggled) -->
+                </button>
+                <div id="notification-bell-container" class="relative">
+                    <button id="notification-bell" class="relative text-gray-600 hover:text-indigo-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                         <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
                     </button>
-                    <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl p-2 hidden z-20 border max-h-96 overflow-y-auto"></div>
+                    <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl p-2 hidden z-20 border notification-dropdown"></div>
                 </div>
-                <a href="index.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">← Back to Main App</a>
+                <button id="logout-btn" class="text-sm text-red-600 hover:underline">Logout</button>
             </div>
         </header>
+        
+        <div id="active-rentals-section" class="mb-6"></div>
 
-        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto no-print">
-            <button id="tab-dashboard" class="nav-button active py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Dashboard</button>
-            <button id="tab-listings" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Listings</button>
-            <button id="tab-orders" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Order Management</button>
-            <button id="tab-payments" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Payment Management</button>
-            <button id="tab-support" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Support &amp; Disputes</button>
-            <button id="tab-settings" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Settings</button>
+        <div class="border-b border-gray-200 mb-4">
+            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                <button data-tab="my-orders" class="tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">My Stitching Orders</button>
+                <button data-tab="my-ledger" class="tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Marketplace Ledger</button>
+                <button data-tab="marketplace" class="tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Marketplace</button>
+            </nav>
         </div>
 
-        <div id="global-search-results" class="mb-6"></div>
-
-        <main id="app-content"></main>
+        <div id="tab-content"></div>
+        
+        <footer class="text-center p-4 mt-8 text-xs text-gray-500">
+            Navrose Stitching Point © 2024 | <a href="#" id="tnc-link" class="hover:underline">Terms &amp; Conditions</a>
+        </footer>
     </div>
 
-    <!-- Modals -->
-    <div id="item-detail-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal p-4">
-        <div id="item-detail-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"></div>
+    <!-- Modals and Floating Elements -->
+    <div id="modal-container" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden modal">
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg"></div>
     </div>
-    <div id="chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal p-4">
-        <div id="chat-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-[80vh]">
-            <!-- Chat content will be rendered here -->
+    <div id="tnc-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-bold">Terms &amp; Conditions</h3>
+                <button onclick="document.getElementById('tnc-modal').classList.add('hidden')" class="text-gray-500 hover:text-gray-800 text-2xl">×</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <h4 class="font-semibold">1. Order Placement</h4>
+                <p class="text-sm text-gray-600 mb-4">All orders are subject to acceptance and availability. Measurements provided by the customer are their responsibility.</p>
+                <h4 class="font-semibold">2. Payments</h4>
+                <p class="text-sm text-gray-600 mb-4">Full or partial payment may be required before work begins. Final payment is due upon pickup. Balances outstanding for more than 30 days may incur late fees.</p>
+                <h4 class="font-semibold">3. Alterations &amp; Adjustments</h4>
+                <p class="text-sm text-gray-600 mb-4">Minor adjustments post-delivery are included within 7 days of pickup. Major changes may incur additional charges.</p>
+                <h4 class="font-semibold">4. Marketplace</h4>
+                <p class="text-sm text-gray-600 mb-4">The marketplace is a platform for users to connect. We are not responsible for the quality, safety, or legality of items listed. All transactions are between the buyer and seller.</p>
+            </div>
         </div>
     </div>
-    <div id="edit-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal p-4">
-         <div id="edit-modal-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md"></div>
+    
+    <!-- Promotion Modal -->
+    <div id="promotion-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col">
+            <div class="p-4 border-b bg-indigo-500 text-white rounded-t-lg">
+                <h3 class="text-lg font-bold">A Message from Navrose Stitching Point</h3>
+            </div>
+            <div id="promotion-message-content" class="p-6 overflow-y-auto"></div>
+            <div class="p-4 border-t text-right bg-gray-50 rounded-b-lg">
+                <button onclick="document.getElementById('promotion-modal').classList.add('hidden')" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg">Close</button>
+            </div>
+        </div>
     </div>
-
-     <!-- Toast -->
-    <div id="toast" class="hidden fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg"></div>
+    
+    <button id="chat-fab" class="fixed bottom-6 right-6 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 transition-transform hover:scale-110 z-30" title="Chat with Admin">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd"></path></svg>
+    </button>
+    
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+    <audio id="notification-sound" src="https://freesound.org/data/previews/415/415763_6142149-lq.mp3" preload="auto"></audio>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyC0_DQIiyaVQllFH4pxH1Dm3r2kFXXoOgc",
             authDomain: "navrosetailorapp.firebaseapp.com",
             databaseURL: "https://navrosetailorapp-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "navrosetailorapp",
-            storageBucket: "navrosetailorapp.firebasestorage.app",
+            projectId: "navrosetailorapp"
         };
-
-        let db;
-        let products = {}, transactions = [], chats = {}, customers = {};
-        let marketplaceSettings = { defaultSaleCommission: 10, defaultRentCommission: 15, promoCodes: {} };
-        let adminNotifications = [];
-        let unreadAdminNotifications = 0;
-        let unreadChats = new Set();
-        const ADMIN_MOBILE = "0000000000"; // Admin's own mobile number to identify sent messages
-        const ADMIN_WHATSAPP_NUMBER = "917696272780";
         
-        // Ledger state
-        let ledgerSortState = { column: 'date', direction: 'desc' };
+        let db;
+        let currentUser = null;
+        let allCustomers = [];
+        let allProducts = [];
+        let allTransactions = [];
+        let marketplaceSettings = {};
+        let notifications = [];
+        let unreadCount = 0;
+        let voiceEnabled = true;
+        let cart = [];
+        let appliedPromo = null;
+        let rentalCountdownInterval = null;
 
-        const ICONS = {
-            phone: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>`,
-            whatsapp: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z M12 5.583c.365 0 .703.111 1.002.316l.11.063c.27.185.27.516.035.797l-2.455 4.095c-.236.394-.099.811.306 1.018l.112.054c.48.243.987.362 1.553.362.593 0 1.192-.128 1.776-.39l.114-.05c.345-.165.732.14.595.53l-1.264 3.447c-.137.39-.56.632-.99.533l-.116-.023c-1.003-.19-1.958-.613-2.813-1.258l-.092-.063c-.855-.645-1.523-1.476-1.95-2.435l-.048-.113c-.237-.563.264-1.08.872-1.042l.115.006c.48.023.935.165 1.348.42l.09.048c.305.165.65.048.797-.264l1.18-2.455c.148-.318.048-.714-.249-.888l-.092-.048c-.287-.156-.593-.243-.913-.243-.332 0-.655.086-.948.243l-.09.056c-.33.208-.768.035-.872-.345l-.27-1.13c-.104-.428.165-.833.595-.913l.116-.023c.332-.063.67-.094 1.018-.094z"/></svg>`,
-            chat: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd" /></svg>`
-        };
+        const ADMIN_MOBILE = "0000000000"; // Placeholder for Admin's mobile number
+        const ADMIN_WHATSAPP_NUMBER = "917696272780";
 
-        const appContent = document.getElementById('app-content');
-        const tabs = document.querySelectorAll('.nav-button');
+        let notificationListener = null;
+        let chatListener = null;
+        let sellerListeners = [];
 
+        const loginView = document.getElementById('login-view');
+        const mainView = document.getElementById('main-view');
+        const tabContent = document.getElementById('tab-content');
+
+        // --- UTILS ---
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -145,965 +172,1243 @@
             setTimeout(() => toast.classList.add('hidden'), 3000);
         }
 
-        const getGoogleDriveImageUrl = (sharingUrl) => {
-            if (!sharingUrl || !sharingUrl.includes('drive.google.com')) {
-                return sharingUrl || 'https://via.placeholder.com/150x100.png?text=No+Image';
-            }
-            const fileIdMatch = sharingUrl.match(/file\/d\/([a-zA-Z0-9_-]+)/);
-            if (fileIdMatch && fileIdMatch[1]) {
-                const fileId = fileIdMatch[1];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
-            }
-            return 'https://via.placeholder.com/150x100.png?text=Invalid+Link';
-        };
-
-        const debounce = (func, delay) => {
-            let timeout;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), delay);
-            };
-        };
-
-        const highlightText = (text, query) => {
-            if (!query || !text) return String(text);
-            const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-            const re = new RegExp(`(${escapedQuery})`, 'gi');
-            return String(text).replace(re, '<span class="bg-yellow-200 font-bold rounded-sm">$1</span>');
-        };
+        function speak(text) {
+            if (!voiceEnabled || !('speechSynthesis' in window)) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-IN';
+            speechSynthesis.speak(utterance);
+        }
         
-        const renderFunctions = {
-            dashboard: renderDashboard,
-            listings: renderListings,
-            orders: renderOrders,
-            payments: renderPayments,
-            support: renderSupport,
-            settings: renderSettings
-        };
+        // --- AUTH ---
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mobile = document.getElementById('mobile-number').value.trim();
+            if (/^\d{10}$/.test(mobile)) {
+                await login(mobile);
+            } else {
+                showToast("Please enter a valid 10-digit mobile number.");
+            }
+        });
 
-        function switchView(viewName) {
-            tabs.forEach(tab => {
-                tab.classList.toggle('active', tab.id === `tab-${viewName}`);
-            });
-            renderFunctions[viewName]();
-        }
-
-        // --- GLOBAL SEARCH FUNCTIONS ---
-        function globalAdminSearch(query) {
-            const lowerQuery = query.toLowerCase();
-            const results = {
-                products: [],
-                customers: [],
-                orders: []
-            };
-
-            // Search Products
-            Object.values(products).forEach(p => {
-                if ((p.title && p.title.toLowerCase().includes(lowerQuery)) || (p.description && p.description.toLowerCase().includes(lowerQuery))) {
-                    results.products.push(p);
-                }
-            });
-
-            // Search Customers
-            Object.values(customers).forEach(c => {
-                if ((c.name && c.name.toLowerCase().includes(lowerQuery)) || (c.mobile && c.mobile.includes(lowerQuery))) {
-                    results.customers.push(c);
-                }
-            });
-
-            // Search Orders (Transactions)
-            transactions.forEach(t => {
-                const productTitle = products[t.productId]?.title || '';
-                const buyerName = customers[t.buyerMobile]?.name || '';
-                const sellerName = customers[t.sellerMobile]?.name || '';
-                if (productTitle.toLowerCase().includes(lowerQuery) || buyerName.toLowerCase().includes(lowerQuery) || sellerName.toLowerCase().includes(lowerQuery)) {
-                    results.orders.push(t);
-                }
-            });
-
-            return results;
-        }
-
-        function renderGlobalAdminSearchResults(results, query) {
-            const container = document.getElementById('global-search-results');
-            let html = '';
-
-            if (results.products.length === 0 && results.customers.length === 0 && results.orders.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 p-4">No results found.</p>';
+        async function login(mobile) {
+            const customersSnap = await firebase.database().ref('customers').once('value');
+            allCustomers = Object.values(customersSnap.val() || {});
+            const customer = allCustomers.find(c => c.mobile === mobile);
+            
+            if (!customer) {
+                alert("please register first then login contact to 7696272780 for registration.");
                 return;
             }
 
-            if (results.products.length > 0) {
-                html += `<h3 class="text-lg font-semibold mb-2 px-2">Products</h3>`;
-                html += results.products.slice(0, 5).map(p => `
-                    <div class="p-3 border-b hover:bg-slate-100 cursor-pointer" onclick="openProductEditModal('${p.id}')">
-                        <p class="font-medium">${highlightText(p.title, query)}</p>
-                        <p class="text-sm text-gray-600">Seller: ${p.sellerName}</p>
-                    </div>
-                `).join('');
-            }
-
-            if (results.customers.length > 0) {
-                html += `<h3 class="text-lg font-semibold mt-4 mb-2 px-2">Customers</h3>`;
-                html += results.customers.slice(0, 5).map(c => `
-                    <div class="p-3 border-b hover:bg-slate-100 cursor-pointer" onclick="openCustomerDetailModal('${c.mobile}')">
-                        <p class="font-medium">${highlightText(c.name, query)} (${highlightText(c.mobile, query)})</p>
-                    </div>
-                `).join('');
-            }
-
-            if (results.orders.length > 0) {
-                html += `<h3 class="text-lg font-semibold mt-4 mb-2 px-2">Orders</h3>`;
-                html += results.orders.slice(0, 5).map(t => `
-                    <div class="p-3 border-b hover:bg-slate-100 cursor-pointer" onclick="openEditStatusModalWrapper('${t.id}')">
-                        <p class="font-medium">Order for ${highlightText(products[t.productId]?.title || 'N/A', query)}</p>
-                        <p class="text-sm text-gray-600">Buyer: ${highlightText(customers[t.buyerMobile]?.name || 'N/A', query)}</p>
-                    </div>
-                `).join('');
-            }
+            currentUser = { mobile };
+            localStorage.setItem('loggedInUser', JSON.stringify(currentUser));
             
-            container.innerHTML = `<div class="bg-white rounded-lg shadow">${html}</div>`;
+            const [transactionsSnap, settingsSnap, productsSnap] = await Promise.all([
+                firebase.database().ref('transactions').once('value'),
+                firebase.database().ref('marketplaceSettings').once('value'),
+                firebase.database().ref('marketplaceProducts').once('value')
+            ]);
+            
+            allTransactions = Object.values(transactionsSnap.val() || {});
+            marketplaceSettings = settingsSnap.val() || {};
+            allProducts = Object.values(productsSnap.val() || {});
+            
+            loginView.classList.add('hidden');
+            mainView.classList.remove('hidden');
+            document.getElementById('customer-name-display').textContent = customer.name;
+            
+            setupNotificationListener();
+            setupSellerListeners();
+            setupChatListener();
+            renderMyActiveRentals();
+            switchTab('my-orders');
         }
+        
+        document.getElementById('logout-btn').addEventListener('click', () => {
+             if (notificationListener) notificationListener.off();
+             if (chatListener) chatListener.off();
+             if (rentalCountdownInterval) clearInterval(rentalCountdownInterval);
+             sellerListeners.forEach(listener => listener.ref.off(listener.event));
+             sellerListeners = [];
+             currentUser = null;
+             localStorage.removeItem('loggedInUser');
+             mainView.classList.add('hidden');
+             loginView.classList.remove('hidden');
+        });
 
-        function openEditStatusModalWrapper(transactionId) {
-            const transaction = transactions.find(t => t.id === transactionId);
-            if (transaction) {
-                openEditStatusModal(transaction);
+        // --- TABS ---
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+            renderMyActiveRentals(); // Always refresh rental status
+            switch(tabId) {
+                case 'my-orders': renderMyOrders(); break;
+                case 'my-ledger': renderMyLedger(); break;
+                case 'marketplace': renderMarketplace(); break;
             }
         }
 
         // --- RENDER FUNCTIONS ---
-        function renderDashboard() {
-            const approvedCount = Object.values(products).filter(p => p.status === 'approved').length;
-            const pendingCount = Object.values(products).filter(p => p.status === 'pending_approval').length;
-            const openDisputes = transactions.filter(t => t.status === 'dispute_raised').length;
+        async function renderMyOrders() {
+            tabContent.innerHTML = `<p>Loading your stitching orders...</p>`;
+            if (!currentUser) return;
+            const ordersRef = firebase.database().ref('orders').orderByChild('customerMobile').equalTo(currentUser.mobile);
+            const snapshot = await ordersRef.once('value');
+            const orders = Object.values(snapshot.val() || {});
 
-            const revenueTransactions = transactions.filter(t => t.status !== 'dispute_raised' && t.type !== 'deposit_return');
-            const totalRevenue = revenueTransactions.reduce((sum, t) => {
-                // For rentals, revenue is only the rental fee, not the security deposit
-                if (t.type === 'rent') return sum + (parseFloat(t.rentalTotal) || 0) - (parseFloat(t.discountApplied) || 0);
-                return sum + (parseFloat(t.amountPaid) || 0);
-            }, 0);
-            const totalCommission = revenueTransactions.reduce((sum, t) => sum + (parseFloat(t.commission) || 0), 0);
-            const depositsHeld = transactions.reduce((sum, t) => {
-                if(t.type === 'rent' && t.depositStatus !== 'returned') return sum + (parseFloat(t.securityDeposit) || 0);
-                return sum;
-            }, 0);
+            if (orders.length === 0) {
+                 tabContent.innerHTML = `<p>You have no stitching orders.</p>`;
+                 return;
+            }
 
-
-            appContent.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Active Listings</h3><p class="text-3xl font-bold mt-2">${approvedCount}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Pending Approval</h3><p class="text-3xl font-bold mt-2 text-yellow-600">${pendingCount}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Total Revenue</h3><p class="text-3xl font-bold mt-2">₹${totalRevenue.toFixed(2)}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Commission Earned</h3><p class="text-3xl font-bold mt-2 text-green-600">₹${totalCommission.toFixed(2)}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Security Deposits Held</h3><p class="text-3xl font-bold mt-2 text-blue-600">₹${depositsHeld.toFixed(2)}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Open Disputes</h3><p class="text-3xl font-bold mt-2 text-red-600">${openDisputes}</p></div>
+            tabContent.innerHTML = `
+                <div class="space-y-4">
+                    ${orders.sort((a,b) => new Date(b.bookingDate) - new Date(a.bookingDate)).map(o => {
+                        const itemsList = o.items ? o.items.map(i => i.item).join(', ') : o.description;
+                        const pickupDate = o.items ? o.items[0]?.pickupDate : o.pickupDate;
+                        return `
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold">Order #${o.orderNumber}</h3>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${o.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${o.status}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Items: ${itemsList}</p>
+                            <p class="text-sm text-gray-600">Pickup Date: ${pickupDate || 'N/A'}</p>
+                        </div>
+                    `}).join('')}
                 </div>
             `;
         }
+        
+        async function renderMyLedger() {
+            tabContent.innerHTML = `<p>Loading your marketplace ledger...</p>`;
+            if (!currentUser) return;
 
-        function renderListings(filterStatus = 'all') {
-            const subNavButtons = [
-                { status: 'all', label: 'All' },
-                { status: 'pending_approval', label: 'Pending' },
-                { status: 'approved', label: 'Approved' },
-                { status: 'rejected', label: 'Rejected' },
-                { status: 'sold', label: 'Sold' }
-            ];
+            const productsSnap = await db.ref('marketplaceProducts').once('value');
+            const products = productsSnap.val() || {};
+            const myTransactions = allTransactions.filter(t => t.buyerMobile === currentUser.mobile || t.sellerMobile === currentUser.mobile);
 
-            appContent.innerHTML = `
-                <div>
-                    <h2 class="text-2xl font-bold mb-4">Manage Listings</h2>
-                    <div class="border-b border-gray-200 mb-4">
-                        <nav class="-mb-px flex space-x-4 overflow-x-auto" aria-label="Tabs">
-                            ${subNavButtons.map(btn => `
-                                <button data-filter="${btn.status}" class="sub-nav-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm ${filterStatus === btn.status ? 'active' : ''}">
-                                    ${btn.label}
-                                </button>
-                            `).join('')}
-                        </nav>
-                    </div>
-                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                        <table class="w-full min-w-max">
-                            <thead>
-                                <tr class="border-b-2">
-                                    <th class="p-3 text-left text-sm font-semibold">Image</th>
-                                    <th class="p-3 text-left text-sm font-semibold">Product</th>
-                                    <th class="p-3 text-left text-sm font-semibold">Seller</th>
-                                    <th class="p-3 text-left text-sm font-semibold">Details</th>
-                                    <th class="p-3 text-left text-sm font-semibold">Status</th>
-                                    <th class="p-3 text-left text-sm font-semibold">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            document.querySelectorAll('.sub-nav-button').forEach(btn => {
-                btn.addEventListener('click', () => renderListings(btn.dataset.filter));
-            });
-
-            const productList = Object.values(products).filter(p => filterStatus === 'all' || p.status === filterStatus);
-            productList.sort((a, b) => new Date(b.listedDate) - new Date(a.listedDate));
-
-            const tableBody = appContent.querySelector('tbody');
-            if (productList.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">No listings found for this filter.</td></tr>`;
+            if (myTransactions.length === 0) {
+                tabContent.innerHTML = `<p class="text-center text-gray-600 mt-4">You have no marketplace transactions yet.</p>`;
                 return;
             }
 
-            tableBody.innerHTML = productList.map(p => {
-                const imageUrl = getGoogleDriveImageUrl(p.imageUrl);
-                const statusText = (p.status || '').replace(/_/g, ' ');
-                let statusClass = 'bg-gray-100 text-gray-800';
-                if (p.status === 'sold') statusClass = 'bg-red-100 text-red-800';
-                else if (p.status === 'approved') statusClass = 'bg-green-100 text-green-800';
-                else if (p.status === 'pending_approval') statusClass = 'bg-yellow-100 text-yellow-800';
-                else if (p.status === 'rejected') statusClass = 'bg-slate-200 text-slate-600';
+            let totalDebit = 0;
+            let totalCredit = 0;
+            let ledgerLines = [];
 
-                let actionButtons = '';
-                if (p.status === 'pending_approval') {
-                    actionButtons += `<button onclick="handleAction('Approve', '${p.id}')" class="text-xs font-semibold text-green-600 hover:underline">Approve</button>`;
-                    actionButtons += `<button onclick="handleAction('Reject', '${p.id}')" class="text-xs font-semibold text-red-600 hover:underline">Reject</button>`;
-                }
-                actionButtons += `<button onclick="openItemEditModal('${p.id}')" class="text-xs font-semibold text-blue-600 hover:underline">Edit</button>`;
-                actionButtons += `<button onclick="handleAction('Delete', '${p.id}')" class="text-xs font-semibold text-red-600 hover:underline">Delete</button>`;
+            myTransactions.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)).forEach(t => {
+                const product = products[t.productId] || { title: 'Unknown Item' };
+                const isBuyer = t.buyerMobile === currentUser.mobile;
                 
-                return `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2"><img src="${imageUrl}" alt="${p.title}" class="w-20 h-16 object-cover rounded"></td>
-                        <td class="p-3"><p class="font-semibold">${p.title}</p><p class="text-xs text-gray-500">${p.description}</p></td>
-                        <td class="p-3 text-xs">${p.sellerName || 'N/A'}<br>${p.sellerMobile || ''}</td>
-                        <td class="p-3 text-xs">
-                            <strong>Type:</strong> ${p.listingType}<br>
-                            ${(p.price) ? `<strong>Sale:</strong> ₹${p.price}<br>` : ''}
-                            ${(p.rentPrice) ? `<strong>Rent:</strong> ₹${p.rentPrice}/day<br>` : ''}
-                        </td>
-                        <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full capitalize ${statusClass}">${statusText}</span></td>
-                        <td class="p-3"><div class="flex flex-col gap-1 items-start">${actionButtons}</div></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        
-        function renderOrders() {
-            appContent.innerHTML = `
-                <div>
-                    <h2 class="text-2xl font-bold mb-4">Order Management</h2>
-                    <div class="border-b border-gray-200 mb-4">
-                        <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                            <button data-subtab="sale" class="sub-nav-button active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Sale Orders</button>
-                            <button data-subtab="rent" class="sub-nav-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Rent Orders</button>
-                        </nav>
-                    </div>
-                    <div id="orders-content"></div>
-                </div>
-            `;
+                let quantityInfo = t.quantity ? ` x ${t.quantity}` : '';
 
-            document.querySelectorAll('.sub-nav-button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.sub-nav-button').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    if (e.target.dataset.subtab === 'sale') renderSaleOrders();
-                    else renderRentOrders();
-                });
-            });
-
-            renderSaleOrders(); // Default view
-        }
-
-        function renderSaleOrders() {
-            const saleTransactions = transactions.filter(t => t.type === 'sale' || !t.type); // Backward compatibility
-            const content = document.getElementById('orders-content');
-            
-            const headers = [
-                { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
-                { title: 'Product', key: 'productId', format: (pid, item) => {
-                    const productTitle = products[pid]?.title || 'Unknown';
-                    let variantInfo = '';
-                    if (item.selectedSize || item.selectedColor) {
-                        variantInfo = ` <span class="text-xs text-gray-500">(${(item.selectedSize || '')}${(item.selectedSize && item.selectedColor) ? ', ' : ''}${(item.selectedColor || '')})</span>`;
+                if (isBuyer) {
+                    if (t.type === 'sale') {
+                        ledgerLines.push({ date: t.timestamp, description: `Purchased: ${product.title}${quantityInfo}`, debit: t.amountPaid, credit: 0 });
+                    } else if (t.type === 'rent') {
+                        ledgerLines.push({ date: t.timestamp, description: `Rent Fee: ${product.title}`, debit: t.rentalTotal, credit: 0 });
+                        if (t.securityDeposit > 0) {
+                            ledgerLines.push({ date: t.timestamp, description: `Security Deposit Paid`, debit: t.securityDeposit, credit: 0, isDeposit: true });
+                        }
+                        if (t.depositStatus === 'returned' && t.securityDeposit > 0) {
+                           ledgerLines.push({ date: t.timestamp + 1, description: `Security Deposit Returned`, debit: 0, credit: t.securityDeposit, isDeposit: true });
+                        }
                     }
-                    if (item.quantity) {
-                         variantInfo += ` <span class="text-xs font-semibold">x ${item.quantity}</span>`;
-                    }
-                    return productTitle + variantInfo;
-                }},
-                { title: 'Buyer', key: 'buyerMobile', format: mob => customers[mob]?.name || mob },
-                { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
-                { title: 'Amount', key: 'amountPaid', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
-                { title: 'Status', key: 'status', format: val => `<span class="font-semibold capitalize">${(val || '').replace(/_/g, ' ')}</span>` },
-            ];
-
-            content.innerHTML = `
-                <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                    <table class="w-full min-w-max">
-                        <thead><tr>
-                            ${headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap">${h.title}</th>`).join('')}
-                            <th class="p-3 text-left text-sm font-semibold whitespace-nowrap">Contact & Actions</th>
-                        </tr></thead>
-                        <tbody>
-                            ${saleTransactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
-                                const buyerName = customers[t.buyerMobile]?.name || t.buyerMobile;
-                                const sellerName = customers[t.sellerMobile]?.name || t.sellerMobile;
-                                
-                                return `
-                                <tr class="border-b hover:bg-gray-50">
-                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key], t) : (t[h.key] || 'N/A')}</td>`).join('')}
-                                    <td class="p-3 text-sm flex gap-2">
-                                        <button onclick="openChatModal('${t.buyerMobile}')" title="Chat Buyer" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
-                                        <button onclick="handleAction('Edit_Status', '${t.id}')" class="text-xs font-semibold text-indigo-600 hover:underline">Edit Status</button>
-                                    </td>
-                                </tr>
-                                `
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function renderRentOrders() {
-            const rentTransactions = transactions.filter(t => t.type === 'rent');
-            const content = document.getElementById('orders-content');
-
-            content.innerHTML = `
-                <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                    <table class="w-full min-w-max">
-                        <thead><tr>
-                            <th class="p-3 text-left text-sm font-semibold">Date</th>
-                            <th class="p-3 text-left text-sm font-semibold">Product</th>
-                            <th class="p-3 text-left text-sm font-semibold">Renter</th>
-                            <th class="p-3 text-left text-sm font-semibold">Duration</th>
-                            <th class="p-3 text-left text-sm font-semibold">Due Date</th>
-                             <th class="p-3 text-left text-sm font-semibold">Deposit</th>
-                            <th class="p-3 text-left text-sm font-semibold">Status</th>
-                            <th class="p-3 text-left text-sm font-semibold">Actions</th>
-                        </tr></thead>
-                        <tbody>
-                            ${rentTransactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
-                                const startDate = new Date(t.timestamp);
-                                const dueDate = new Date(startDate);
-                                dueDate.setDate(startDate.getDate() + t.rentalDays);
-                                const now = new Date();
-                                const diffTime = dueDate - now;
-                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                
-                                let statusText, statusColor;
-                                if (t.status === 'returned' && t.depositStatus === 'returned') {
-                                    statusText = 'Closed';
-                                    statusColor = 'text-green-600';
-                                } else if (t.status === 'returned') {
-                                    statusText = 'Returned, Deposit Pending';
-                                    statusColor = 'text-blue-600';
-                                } else if (diffDays > 0) {
-                                    statusText = `Due in ${diffDays} day(s)`;
-                                    statusColor = 'text-blue-600';
-                                } else if (diffDays === 0) {
-                                    statusText = 'Due today';
-                                    statusColor = 'text-amber-600';
-                                } else {
-                                    statusText = `Overdue by ${Math.abs(diffDays)} day(s)`;
-                                    statusColor = 'text-red-600 font-bold';
-                                }
-                                
-                                let variantInfo = '';
-                                if (t.selectedSize || t.selectedColor) {
-                                    variantInfo = ` <span class="text-xs text-gray-500">(${(t.selectedSize || '')}${(t.selectedSize && t.selectedColor) ? ', ' : ''}${(t.selectedColor || '')})</span>`;
-                                }
-
-                                const depositStatus = t.depositStatus === 'returned'
-                                    ? '<span class="text-green-600 font-semibold">Returned</span>'
-                                    : `<span class="text-amber-600 font-semibold">Held</span>`;
-
-                                return `
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="p-3 text-sm">${startDate.toLocaleDateString()}</td>
-                                    <td class="p-3 text-sm">${products[t.productId]?.title || 'Unknown'}${variantInfo}</td>
-                                    <td class="p-3 text-sm">${customers[t.buyerMobile]?.name || t.buyerMobile}</td>
-                                    <td class="p-3 text-sm">${t.rentalDays} day(s)</td>
-                                    <td class="p-3 text-sm">${dueDate.toLocaleDateString()}</td>
-                                    <td class="p-3 text-sm">₹${(t.securityDeposit || 0).toFixed(2)} (${depositStatus})</td>
-                                    <td class="p-3 text-sm font-semibold ${statusColor}">${statusText}</td>
-                                    <td class="p-3 text-sm space-x-2">
-                                        ${t.status !== 'returned' ? `<button onclick="handleAction('Mark_Returned', '${t.id}')" class="font-semibold text-blue-600 hover:underline">Mark Returned</button>` : ''}
-                                        ${t.depositStatus !== 'returned' ? `<button onclick="handleAction('Return_Deposit', '${t.id}')" class="font-semibold text-green-600 hover:underline">Return Deposit</button>` : ''}
-                                    </td>
-                                </tr>
-                                `
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        
-        function renderPayments() {
-            let ledgerItems = [];
-
-            transactions.forEach(t => {
-                const product = products[t.productId] || { title: 'Unknown' };
-                const buyer = customers[t.buyerMobile] || { name: t.buyerMobile };
-                const seller = customers[t.sellerMobile] || { name: t.sellerMobile };
-                const txDate = new Date(t.timestamp);
-                const commission = parseFloat(t.commission) || 0;
-
-                if (commission > 0) {
-                    ledgerItems.push({ date: txDate, description: `Commission from ${t.type} of '${product.title}' (Sold by ${seller.name})`, debit: 0, credit: commission, transactionId: t.id });
-                }
-                
-                if (t.status === 'payout_complete') {
-                    const payoutAmount = (t.type === 'sale' ? (parseFloat(t.amountPaid) || 0) : (parseFloat(t.rentalTotal) || 0)) - commission;
-                    if (payoutAmount > 0) {
-                        ledgerItems.push({ date: t.payoutDate ? new Date(t.payoutDate) : txDate, description: `Payout to ${seller.name} for '${product.title}'`, debit: payoutAmount, credit: 0, transactionId: t.id });
-                    }
-                }
-                
-                if (t.type === 'rent') {
-                    const deposit = parseFloat(t.securityDeposit) || 0;
-                    if (deposit > 0) {
-                        ledgerItems.push({ date: txDate, description: `Security deposit held from ${buyer.name} for '${product.title}'`, debit: 0, credit: deposit, isDeposit: true, transactionId: t.id });
-                        if (t.depositStatus === 'returned') {
-                            ledgerItems.push({ date: t.depositReturnDate ? new Date(t.depositReturnDate) : txDate, description: `Security deposit returned to ${buyer.name} for '${product.title}'`, debit: deposit, credit: 0, isDeposit: true, transactionId: t.id });
+                } else { // Is Seller
+                    if (t.type === 'sale') {
+                        const netReceived = (t.amountPaid || 0) - (t.commission || 0);
+                        ledgerLines.push({ date: t.timestamp, description: `Sold: ${product.title}${quantityInfo}`, debit: 0, credit: netReceived });
+                    } else if (t.type === 'rent') {
+                        const netRentReceived = (t.rentalTotal || 0) - (t.commission || 0);
+                        ledgerLines.push({ date: t.timestamp, description: `Rent Received: ${product.title}`, debit: 0, credit: netRentReceived });
+                        
+                        if (t.securityDeposit > 0) {
+                            ledgerLines.push({ date: t.timestamp, description: `Security Deposit Held from Buyer`, debit: 0, credit: t.securityDeposit, isDeposit: true });
+                        }
+                        if (t.depositStatus === 'returned' && t.securityDeposit > 0) {
+                           ledgerLines.push({ date: t.timestamp + 1, description: `Security Deposit Returned to Buyer`, debit: t.securityDeposit, credit: 0, isDeposit: true });
                         }
                     }
                 }
             });
-
-            // Sorting logic
-            ledgerItems.sort((a, b) => {
-                let valA = a[ledgerSortState.column];
-                let valB = b[ledgerSortState.column];
-                const direction = ledgerSortState.direction === 'asc' ? 1 : -1;
-
-                if (ledgerSortState.column === 'description') {
-                    return valA.localeCompare(valB) * direction;
-                }
-                return (valA < valB ? -1 : 1) * direction;
-            });
-
-            const totalDebit = ledgerItems.reduce((sum, item) => sum + item.debit, 0);
-            const totalCredit = ledgerItems.reduce((sum, item) => sum + item.credit, 0);
-            const netProfit = ledgerItems.filter(i => !i.isDeposit).reduce((sum, item) => sum + item.credit - item.debit, 0);
             
-            const rows = ledgerItems.map(item => `
-                <tr class="border-b ${item.isDeposit ? 'bg-slate-50 text-slate-600' : 'hover:bg-slate-50'}">
-                    <td class="p-3 whitespace-nowrap">${item.date.toLocaleDateString()}</td>
-                    <td class="p-3">${item.description}</td>
-                    <td class="p-3 text-right font-mono text-red-600">${item.debit > 0 ? `₹${item.debit.toFixed(2)}` : ''}</td>
-                    <td class="p-3 text-right font-mono text-green-600">${item.credit > 0 ? `₹${item.credit.toFixed(2)}` : ''}</td>
-                </tr>
-            `).join('');
+            const tableRows = ledgerLines.map(line => {
+                totalDebit += line.debit || 0;
+                totalCredit += line.credit || 0;
+                return `
+                    <tr class="border-b ${line.isDeposit ? 'bg-gray-50 text-gray-600' : ''}">
+                        <td class="p-3">${new Date(line.date).toLocaleDateString()}</td>
+                        <td class="p-3">${line.description}</td>
+                        <td class="p-3 font-mono text-right text-red-600">${line.debit > 0 ? `₹${line.debit.toFixed(2)}` : ''}</td>
+                        <td class="p-3 font-mono text-right text-green-600">${line.credit > 0 ? `₹${line.credit.toFixed(2)}` : ''}</td>
+                    </tr>
+                `;
+            }).join('');
 
-            appContent.innerHTML = `
-                <div class="print-area">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold">Marketplace Ledger</h2>
-                        <button onclick="window.print()" class="bg-slate-200 px-3 py-1 rounded-md no-print">Print</button>
-                    </div>
-                     <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                        <table class="w-full min-w-max">
-                            <thead>
-                                <tr class="border-b-2">
-                                    <th class="p-3 text-left text-sm font-semibold sortable-header" onclick="setLedgerSort('date')">Date</th>
-                                    <th class="p-3 text-left text-sm font-semibold sortable-header" onclick="setLedgerSort('description')">Particulars</th>
-                                    <th class="p-3 text-right text-sm font-semibold sortable-header" onclick="setLedgerSort('debit')">Debit (Out)</th>
-                                    <th class="p-3 text-right text-sm font-semibold sortable-header" onclick="setLedgerSort('credit')">Credit (In)</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows}</tbody>
-                            <tfoot class="font-bold bg-slate-100">
-                                <tr>
-                                    <td colspan="2" class="p-3 text-right">Totals</td>
-                                    <td class="p-3 text-right font-mono text-red-700">₹${totalDebit.toFixed(2)}</td>
-                                    <td class="p-3 text-right font-mono text-green-700">₹${totalCredit.toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3" class="p-3 text-right">Net Cash Flow</td>
-                                    <td class="p-3 text-right font-mono text-lg">${(totalCredit - totalDebit) >= 0 ? `₹${(totalCredit - totalDebit).toFixed(2)}` : `-₹${Math.abs(totalCredit - totalDebit).toFixed(2)}`}</td>
-                                </tr>
-                                 <tr>
-                                    <td colspan="3" class="p-3 text-right">Net Profit (Commission - Payouts)</td>
-                                    <td class="p-3 text-right font-mono text-lg text-blue-700">${netProfit >= 0 ? `₹${netProfit.toFixed(2)}` : `-₹${Math.abs(netProfit).toFixed(2)}`}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            `;
-            updateLedgerSortIndicators();
-        }
+            const netBalance = totalCredit - totalDebit;
 
-        function renderSupport() {
-            const disputed = transactions.filter(t => t.status === 'dispute_raised');
-            const headers = [
-                { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
-                { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
-                { title: 'Buyer', key: 'buyerMobile', format: mob => customers[mob]?.name || mob },
-                { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
-            ];
-             appContent.innerHTML = `
-                <div>
-                    <h2 class="text-2xl font-bold mb-4">Support & Disputes (${disputed.length})</h2>
-                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                        <table class="w-full min-w-max">
-                            <thead><tr>
-                                ${headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap">${h.title}</th>`).join('')}
-                                <th class="p-3 text-left text-sm font-semibold whitespace-nowrap">Actions</th>
-                            </tr></thead>
-                            <tbody>
-                            ${disputed.map(t => `
-                                <tr class="border-b hover:bg-gray-50">
-                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key]) : (t[h.key] || 'N/A')}</td>`).join('')}
-                                    <td class="p-3 text-sm flex gap-4">
-                                        <button onclick="openChatModal('${t.buyerMobile}')" class="font-semibold text-indigo-600 hover:underline">Chat Buyer</button>
-                                        <button onclick="openChatModal('${t.sellerMobile}')" class="font-semibold text-indigo-600 hover:underline">Chat Seller</button>
-                                        <button onclick="handleAction('Resolve_Dispute', '${t.id}')" class="font-semibold text-green-600 hover:underline">Resolve</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+            tabContent.innerHTML = `
+                <div class="bg-white p-4 rounded-lg shadow-sm overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="text-left bg-gray-50">
+                            <tr>
+                                <th class="p-3 font-semibold">Date</th>
+                                <th class="p-3 font-semibold">Description</th>
+                                <th class="p-3 font-semibold text-right">Debit (Paid)</th>
+                                <th class="p-3 font-semibold text-right">Credit (Received)</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                        <tfoot class="font-bold bg-gray-100">
+                            <tr>
+                                <td colspan="2" class="p-3 text-right">Totals</td>
+                                <td class="p-3 font-mono text-right text-red-600">₹${totalDebit.toFixed(2)}</td>
+                                <td class="p-3 font-mono text-right text-green-600">₹${totalCredit.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="p-3 text-right">Net Balance</td>
+                                <td class="p-3 font-mono text-right ${netBalance >= 0 ? 'text-green-600' : 'text-red-600'}">₹${netBalance.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             `;
         }
 
-        function renderSettings() {
-            const promoCodes = marketplaceSettings.promoCodes ? Object.values(marketplaceSettings.promoCodes) : [];
-            const promotion = marketplaceSettings.promotion || {};
-
-            appContent.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Marketplace Settings</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Commission Settings -->
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-bold mb-4">Default Commission Rates</h3>
-                        <form id="commission-form" class="space-y-4">
-                            <div>
-                                <label for="default-sale-commission" class="block text-sm font-medium text-gray-700">Default Sale Commission (%)</label>
-                                <input type="number" id="default-sale-commission" class="form-input mt-1 w-full" value="${marketplaceSettings.defaultSaleCommission || 10}">
-                            </div>
-                            <div>
-                                <label for="default-rent-commission" class="block text-sm font-medium text-gray-700">Default Rent Commission (%)</label>
-                                <input type="number" id="default-rent-commission" class="form-input mt-1 w-full" value="${marketplaceSettings.defaultRentCommission || 15}">
-                            </div>
-                            <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Commission Settings</button>
-                        </form>
-                    </div>
-
-                    <!-- Promo Code Management -->
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-bold mb-4">Manage Promo Codes</h3>
-                        <form id="promo-form" class="space-y-4 border-b pb-6 mb-6">
-                            <input type="hidden" id="promo-id">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="promo-code" class="block text-sm font-medium">Code</label>
-                                    <input type="text" id="promo-code" class="form-input mt-1" placeholder="e.g., SALE10" required>
-                                </div>
-                                <div>
-                                    <label for="promo-type" class="block text-sm font-medium">Type</label>
-                                    <select id="promo-type" class="form-select mt-1">
-                                        <option value="percentage">Percentage (%)</option>
-                                        <option value="fixed">Fixed Amount (₹)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                 <div>
-                                    <label for="promo-value" class="block text-sm font-medium">Value</label>
-                                    <input type="number" id="promo-value" class="form-input mt-1" required>
-                                </div>
-                                 <div>
-                                    <label for="promo-min-order" class="block text-sm font-medium">Min. Order (₹, optional)</label>
-                                    <input type="number" id="promo-min-order" class="form-input mt-1">
-                                </div>
-                            </div>
-                            <button type="submit" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">Save Promo Code</button>
-                        </form>
-
-                        <div id="promo-list" class="space-y-2">
-                            ${promoCodes.map(promo => `
-                                <div class="flex justify-between items-center p-2 rounded ${promo.isActive ? 'bg-green-50' : 'bg-gray-100 text-gray-500'}">
-                                    <div>
-                                        <strong class="font-mono">${promo.code}</strong> - 
-                                        ${promo.discountType === 'percentage' ? `${promo.discountValue}% off` : `₹${promo.discountValue} off`}
-                                        ${promo.minOrderValue ? ` (min ₹${promo.minOrderValue})` : ''}
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="togglePromoStatus('${promo.id}')" class="text-sm font-semibold ${promo.isActive ? 'text-yellow-600' : 'text-green-600'}">${promo.isActive ? 'Deactivate' : 'Activate'}</button>
-                                        <button onclick="deletePromo('${promo.id}')" class="text-sm font-semibold text-red-600">Delete</button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
+        function renderMarketplace() {
+             tabContent.innerHTML = `
+                <div class="flex border-b">
+                    <button data-subtab="browse" class="marketplace-tab-btn active p-3 font-semibold text-sm">Browse</button>
+                    <button data-subtab="list" class="marketplace-tab-btn p-3 font-semibold text-sm">List an Item</button>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow mt-8">
-                    <h3 class="text-xl font-bold mb-4">Client Portal Promotion</h3>
-                    <form id="promotion-form" class="space-y-4">
-                        <div>
-                            <label for="promotion-message" class="block text-sm font-medium text-gray-700">Popup Message</label>
-                            <textarea id="promotion-message" class="form-input mt-1 w-full" rows="4" placeholder="Enter a promotional message to show clients on the login screen.">${promotion.message || ''}</textarea>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="promotion-active" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${promotion.isActive ? 'checked' : ''}>
-                            <label for="promotion-active" class="ml-2 block text-sm text-gray-900">Show this promotion to clients</label>
-                        </div>
-                        <div class="flex justify-end pt-4">
-                            <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Promotion</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            // Attach handlers
-            document.getElementById('commission-form').addEventListener('submit', saveCommissionSettings);
-            document.getElementById('promo-form').addEventListener('submit', savePromoCode);
-            document.getElementById('promotion-form').addEventListener('submit', savePromotionSettings);
+                <div id="marketplace-content" class="mt-4"></div>
+             `;
+             document.querySelectorAll('.marketplace-tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.marketplace-tab-btn').forEach(b => b.classList.remove('active', 'text-indigo-600', 'border-indigo-600'));
+                    e.target.classList.add('active', 'text-indigo-600', 'border-indigo-600');
+                    if (e.target.dataset.subtab === 'browse') renderProductGrid();
+                    else renderListItemForm();
+                });
+             });
+             renderProductGrid();
         }
 
-        // --- ACTION HANDLER ---
-        async function handleAction(action, id) {
-            action = action.toLowerCase();
-            if (action.includes('approve')) {
-                await db.ref(`marketplaceProducts/${id}`).update({ status: 'approved' });
-                showToast('Listing approved.');
-            } else if (action.includes('reject')) {
-                await db.ref(`marketplaceProducts/${id}`).update({ status: 'rejected' });
-                showToast('Listing rejected.');
-            } else if (action.includes('delete')) {
-                 if (confirm("Are you sure you want to delete this item? This cannot be undone.")) {
-                    const product = products[id];
-                    const transaction = transactions.find(t => t.id === id);
-                    if (product) await db.ref(`marketplaceProducts/${id}`).remove();
-                    if (transaction) await db.ref(`transactions/${id}`).remove();
-                    showToast('Item deleted.');
-                }
-            } else if (action.includes('edit_status')) {
-                const transaction = transactions.find(t => t.id === id);
-                if(transaction) openEditStatusModal(transaction);
-            } else if (action.includes('resolve_dispute')) {
-                const transaction = transactions.find(t => t.id === id);
-                if(transaction) openResolveDisputeModal(transaction);
-            } else if (action.includes('mark_paid')) {
-                 if (confirm("Mark this transaction as paid out to the seller?")) {
-                    await db.ref(`transactions/${id}`).update({ status: 'payout_complete' });
-                    showToast('Transaction marked as paid.');
-                }
-            } else if (action.includes('mark_returned')) {
-                 if (confirm("Mark this rental as returned?")) {
-                    await db.ref(`transactions/${id}`).update({ status: 'returned' });
-                    showToast('Rental marked as returned.');
-                }
-            } else if (action.includes('return_deposit')) {
-                 const transaction = transactions.find(t => t.id === id);
-                 if (transaction && confirm(`Return security deposit of ₹${(transaction.securityDeposit || 0).toFixed(2)} for this rental?`)) {
-                    await db.ref(`transactions/${id}`).update({ depositStatus: 'returned' });
-                    showToast('Deposit marked as returned.');
-                }
+        async function renderProductGrid() {
+            const content = document.getElementById('marketplace-content');
+            content.innerHTML = `<p>Loading items...</p>`;
+            
+            const productsSnap = await db.ref('marketplaceProducts').once('value');
+            const productsData = productsSnap.val() || {};
+            allProducts = Object.values(productsData).filter(p => p.status === 'approved' || p.status === 'sold' || p.sellerMobile === currentUser.mobile);
+            
+            if(allProducts.length === 0) {
+                content.innerHTML = `<p>No items in the marketplace yet.</p>`;
+                return;
             }
-        }
-        window.handleAction = handleAction;
-        
-        function openEditStatusModal(transaction) {
-            const modal = document.getElementById('edit-modal');
-            const content = document.getElementById('edit-modal-content');
-            const statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'dispute_raised', 'payout_complete', 'rented_out', 'returned'];
-            content.innerHTML = `
-                <h3 class="font-bold text-lg mb-4">Update Status for Order #${transaction.id.slice(-6)}</h3>
-                <select id="status-select" class="w-full p-2 border rounded">
-                    ${statuses.map(s => `<option value="${s}" ${s === transaction.status ? 'selected' : ''}>${s.replace(/_/g, ' ').toUpperCase()}</option>`).join('')}
-                </select>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button onclick="document.getElementById('edit-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded font-semibold">Cancel</button>
-                    <button onclick="updateTransactionStatus('${transaction.id}')" class="bg-indigo-600 text-white py-2 px-4 rounded font-semibold">Save</button>
-                </div>
-            `;
-            modal.style.display = 'flex';
-        }
-        
-        async function updateTransactionStatus(id) {
-            const newStatus = document.getElementById('status-select').value;
-            await db.ref(`transactions/${id}`).update({ status: newStatus });
-            showToast('Status updated.');
-            document.getElementById('edit-modal').style.display = 'none';
-        }
-        window.updateTransactionStatus = updateTransactionStatus;
-
-        function openItemEditModal(productId) {
-            const product = products[productId];
-            const modal = document.getElementById('item-detail-modal');
-            const content = document.getElementById('item-detail-content');
             
-            content.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-xl font-bold">Edit: ${product.title}</h3>
-                    <button onclick="document.getElementById('item-detail-modal').style.display='none'" class="text-gray-500 text-2xl">&times;</button>
-                </div>
-                <div class="space-y-4">
-                     <div>
-                        <label class="block text-sm font-medium">Sale Commission (%)</label>
-                        <input type="number" id="edit-sale-commission" class="form-input mt-1" value="${product.saleCommissionPercentage || ''}" placeholder="Default (${marketplaceSettings.defaultSaleCommission || 10}%)">
-                    </div>
-                     <div>
-                        <label class="block text-sm font-medium">Rent Commission (%)</label>
-                        <input type="number" id="edit-rent-commission" class="form-input mt-1" value="${product.rentCommissionPercentage || ''}" placeholder="Default (${marketplaceSettings.defaultRentCommission || 15}%)">
-                    </div>
-                </div>
-                <div class="text-right mt-6">
-                    <button onclick="saveItemChanges('${product.id}')" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Changes</button>
-                </div>
-            `;
-            modal.style.display = 'flex';
-        }
+            const activeRentals = new Set(
+                allTransactions
+                    .filter(t => t.type === 'rent' && t.status === 'rented_out')
+                    .map(t => t.productId)
+            );
 
-        async function saveItemChanges(productId) {
-            const saleComm = document.getElementById('edit-sale-commission').value;
-            const rentComm = document.getElementById('edit-rent-commission').value;
-
-            const updates = {
-                saleCommissionPercentage: saleComm ? parseFloat(saleComm) : null,
-                rentCommissionPercentage: rentComm ? parseFloat(rentComm) : null
+            const getGoogleDriveImageUrl = (sharingUrl) => {
+                if (!sharingUrl || !sharingUrl.includes('drive.google.com')) return sharingUrl || 'https://via.placeholder.com/300x200.png?text=No+Image';
+                const fileIdMatch = sharingUrl.match(/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (fileIdMatch && fileIdMatch[1]) return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+                return 'https://via.placeholder.com/300x200.png?text=Invalid+Link';
             };
 
+            content.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${allProducts.map(p => {
+                        const imageUrl = getGoogleDriveImageUrl(p.imageUrl);
+                        const isRented = activeRentals.has(p.id);
+                        const isSold = p.status === 'sold' || (p.stock !== undefined && p.stock <= 0);
+                        
+                        let priceHTML = '';
+                        if ((p.listingType === 'sale' || p.listingType === 'both') && p.price) {
+                            priceHTML += `<p class="text-lg font-semibold text-indigo-600">Buy for ₹${p.price}</p>`;
+                        }
+                        if ((p.listingType === 'rent' || p.listingType === 'both') && p.rentPrice) {
+                            priceHTML += `<p class="text-md text-gray-700">Rent for ₹${p.rentPrice}/day</p>`;
+                        }
+
+                        let rentStatusHTML = '';
+                        if (p.listingType === 'rent' || p.listingType === 'both') {
+                             if(isRented) {
+                                rentStatusHTML = `<div class="w-full text-center text-amber-600 font-bold p-2 bg-amber-100 rounded-md">Currently Rented</div>`;
+                            }
+                        }
+
+                        let actionButtons = '';
+                        if (isSold) {
+                            actionButtons = `<div class="w-full text-center text-red-600 font-bold p-2 bg-red-100 rounded-md">Out of Stock</div>`;
+                        } else if (p.sellerMobile === currentUser.mobile) {
+                            actionButtons = `
+                                <button onclick="openEditForm('${p.id}')" class="w-1/2 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 font-semibold text-sm">Edit</button>
+                                <button onclick="deleteMyProduct('${p.id}')" class="w-1/2 bg-red-500 text-white py-2 rounded-md hover:bg-red-600 font-semibold text-sm">Delete</button>
+                            `;
+                        } else {
+                            actionButtons = `
+                                <button onclick="requestToTry('${p.id}', '${p.title}')" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 font-semibold text-sm">Request to Try</button>
+                                <button onclick="addToCart('${p.id}')" class="w-1/2 bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600 font-semibold text-sm ${isRented ? 'opacity-50 cursor-not-allowed' : ''}" ${isRented ? 'disabled' : ''}>Add to Cart</button>
+                            `;
+                        }
+
+                        return `
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
+                            <img src="${imageUrl}" alt="${p.title}" class="w-full h-48 object-cover">
+                            <div class="p-4 flex flex-col flex-grow">
+                                <h3 class="font-bold text-lg text-gray-800">${p.title}</h3>
+                                <p class="text-sm text-gray-600 mt-1 flex-grow">${p.description}</p>
+                                <div class="mt-4">${priceHTML}</div>
+                                <div class="mt-2">${rentStatusHTML}</div>
+                                <div class="mt-auto pt-4 flex gap-2">${actionButtons}</div>
+                            </div>
+                        </div>
+                    `}).join('')}
+                </div>
+            `;
+        }
+
+        function renderListItemForm() {
+            const content = document.getElementById('marketplace-content');
+            
+            const commonFields = `
+                <div class="bg-blue-50 border-l-4 border-blue-400 text-blue-700 p-4 rounded-md" role="alert">
+                    <p class="font-bold">Image Upload Instructions</p>
+                    <p>After submitting this form, please send the product photo via WhatsApp to the admin. The image will be added to your listing shortly.</p>
+                </div>
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="title" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required></textarea>
+                </div>
+            `;
+            const saleFields = `
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700">Sale Price (₹)</label>
+                    <input type="number" id="price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div>
+                    <label for="stock" class="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                    <input type="number" id="stock" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0" value="1">
+                </div>
+            `;
+            const rentFields = `
+                <div class="space-y-4">
+                    <div>
+                        <label for="rentPrice" class="block text-sm font-medium text-gray-700">Rent Price per day (₹)</label>
+                        <input type="number" id="rentPrice" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                    </div>
+                    <div>
+                        <label for="securityDeposit" class="block text-sm font-medium text-gray-700">Security Deposit (₹)</label>
+                        <input type="number" id="securityDeposit" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                </div>
+            `;
+
+            const renderSaleForm = () => `
+                <form id="list-sale-form" class="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                    ${commonFields}
+                    ${saleFields}
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 font-semibold">List Item for Approval</button>
+                </form>
+            `;
+            const renderRentForm = () => `
+                <form id="list-rent-form" class="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                    ${commonFields}
+                    ${rentFields}
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 font-semibold">List Item for Approval</button>
+                </form>
+            `;
+            const renderBothForm = () => `
+                <form id="list-both-form" class="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                    ${commonFields}
+                    <div class="pt-4 border-t"><h4 class="font-semibold mb-2">Sale Details</h4>${saleFields}</div>
+                    <div class="pt-4 border-t"><h4 class="font-semibold mb-2">Rent Details</h4>${rentFields}</div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 font-semibold">List Item for Approval</button>
+                </form>
+            `;
+
+            content.innerHTML = `
+                <div class="max-w-lg mx-auto">
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-4" aria-label="Listing Type">
+                            <button data-form="sale" class="list-form-tab-btn active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Sell Only</button>
+                            <button data-form="rent" class="list-form-tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Rent Only</button>
+                            <button data-form="both" class="list-form-tab-btn whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm">Sell & Rent</button>
+                        </nav>
+                    </div>
+                    <div id="listing-form-container"></div>
+                </div>
+            `;
+
+            const formContainer = document.getElementById('listing-form-container');
+
+            const switchForm = (formType) => {
+                document.querySelectorAll('.list-form-tab-btn').forEach(btn => {
+                    const isActive = btn.dataset.form === formType;
+                    btn.classList.toggle('active', isActive);
+                    btn.classList.toggle('text-gray-500', !isActive);
+                    btn.classList.toggle('border-transparent', !isActive);
+                });
+                if (formType === 'sale') formContainer.innerHTML = renderSaleForm();
+                else if (formType === 'rent') formContainer.innerHTML = renderRentForm();
+                else if (formType === 'both') formContainer.innerHTML = renderBothForm();
+            };
+
+            document.querySelectorAll('.list-form-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchForm(btn.dataset.form));
+            });
+
+            switchForm('sale'); // Initial render
+        }
+
+
+        async function handleListSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formId = form.id;
+            
+            let listingType;
+            if (formId === 'list-sale-form') listingType = 'sale';
+            else if (formId === 'list-rent-form') listingType = 'rent';
+            else if (formId === 'list-both-form') listingType = 'both';
+            else return;
+
+            const newProduct = {
+                id: Date.now().toString(),
+                sellerMobile: currentUser.mobile,
+                sellerName: allCustomers.find(c => c.mobile === currentUser.mobile)?.name || `User ${currentUser.mobile.slice(-4)}`,
+                title: form.querySelector('#title').value,
+                description: form.querySelector('#description').value,
+                listingType: listingType,
+                status: 'pending_approval',
+                listedDate: new Date().toISOString(),
+                imageUrl: '',
+                price: null,
+                stock: null,
+                rentPrice: null,
+                securityDeposit: null
+            };
+
+            if (listingType === 'sale' || listingType === 'both') {
+                newProduct.price = parseFloat(form.querySelector('#price').value) || null;
+                newProduct.stock = parseInt(form.querySelector('#stock').value, 10) || 0;
+                if (!newProduct.price) {
+                    showToast("Please provide a sale price.");
+                    return;
+                }
+            }
+
+            if (listingType === 'rent' || listingType === 'both') {
+                newProduct.rentPrice = parseFloat(form.querySelector('#rentPrice').value) || null;
+                newProduct.securityDeposit = parseFloat(form.querySelector('#securityDeposit').value) || 0;
+                if (!newProduct.rentPrice) {
+                    showToast("Please provide a rent price.");
+                    return;
+                }
+            }
+            
+            // For rent-only, stock is typically 1 unless specified otherwise.
+            // For simplicity, we'll assume 1 for rent-only items.
+            if (listingType === 'rent' && newProduct.stock === null) {
+                newProduct.stock = 1;
+            }
+
             try {
-                await db.ref(`marketplaceProducts/${productId}`).update(updates);
-                showToast("Product commissions updated!");
-                document.getElementById('item-detail-modal').style.display = 'none';
+                await db.ref('marketplaceProducts/' + newProduct.id).set(newProduct);
+                showToast("Item listed for approval!");
+                document.querySelector('.marketplace-tab-btn[data-subtab="browse"]').click();
             } catch (error) {
-                showToast("Error saving changes.", 4000);
-                console.error(error);
+                showToast("Error listing item. Please try again.");
+                console.error("Error saving product:", error);
             }
         }
-        window.saveItemChanges = saveItemChanges;
-
-        // --- NOTIFICATIONS & CHAT ---
-        function updateAdminNotificationBadge() {
-            const badge = document.getElementById('notification-badge');
-            badge.textContent = unreadAdminNotifications;
-            badge.classList.toggle('hidden', unreadAdminNotifications === 0);
+        
+        // --- NOTIFICATIONS ---
+        function addNotification(message) {
+            notifications.unshift({ id: Date.now(), message, read: false });
+            unreadCount++;
+            document.getElementById('notification-sound').play().catch(e => console.log("Audio play prevented"));
+            speak(message);
+            updateNotificationBadge();
+            renderNotifications();
         }
 
-        function renderAdminNotifications() {
+        function renderNotifications() {
             const dropdown = document.getElementById('notification-dropdown');
-            if (adminNotifications.length === 0) {
+            if (notifications.length === 0) {
                 dropdown.innerHTML = `<p class="p-4 text-center text-sm text-gray-500">No new notifications.</p>`;
                 return;
             }
-            dropdown.innerHTML = adminNotifications.map(n => `
-                <div class="p-3 border-b text-sm cursor-pointer hover:bg-slate-50">
-                    <p class="font-semibold">${n.text}</p>
-                    <p class="text-xs text-slate-500">From: ${n.fromName || n.from}</p>
+            dropdown.innerHTML = notifications.map(n => `
+                <div class="p-3 border-b text-sm cursor-pointer ${n.read ? 'text-gray-500' : 'font-semibold text-gray-800 bg-indigo-50'}">
+                    ${n.message}
                 </div>
             `).join('');
         }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notification-badge');
+            badge.textContent = unreadCount;
+            badge.classList.toggle('hidden', unreadCount === 0);
+        }
+
+        function setupNotificationListener() {
+            if (!currentUser) return;
+            const notificationsRef = db.ref('clientNotifications/' + currentUser.mobile).orderByChild('timestamp').startAt(Date.now());
+            notificationListener = notificationsRef; // store reference to detach on logout
+            notificationsRef.on('child_added', (snapshot) => {
+                const notif = snapshot.val();
+                if (notif) {
+                    addNotification(notif.body);
+                }
+            });
+        }
         
-        function updateAdminChatBadge() {
-            const badge = document.getElementById('chat-badge');
-            badge.textContent = unreadChats.size;
-            badge.classList.toggle('hidden', unreadChats.size === 0);
-        }
+        function setupSellerListeners() {
+            if (!currentUser) return;
+            const now = Date.now();
 
-        async function sendMessageToUser(chatId, text, recipientMobile) {
-            if (!db) {
-                showToast("Database not connected.");
-                return;
-            }
-            const messagesRef = db.ref(`chats/${chatId}/messages`);
-            try {
-                await messagesRef.push({
-                    text: text,
-                    sender: ADMIN_MOBILE,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
+            // 1. For new transactions (sale/rent of my items)
+            const newTransactionRef = db.ref('transactions').orderByChild('timestamp').startAt(now);
+            newTransactionRef.on('child_added', (snapshot) => {
+                const transaction = snapshot.val();
+                if (transaction && transaction.sellerMobile === currentUser.mobile) {
+                    const product = allProducts.find(p => p.id === transaction.productId);
+                    const productName = product ? product.title : 'your item';
+                    allTransactions.push(transaction); // update local cache
+                    if (transaction.type === 'rent') {
+                        addNotification(`Your item '${productName}' has been rented out.`);
+                    } else {
+                        addNotification(`Your item '${productName}' has been sold.`);
+                    }
+                }
+            });
+            sellerListeners.push({ ref: newTransactionRef, event: 'child_added' });
 
-                // Also send a notification to the client
-                const clientNotifRef = db.ref(`clientNotifications/${recipientMobile}`).push();
-                await clientNotifRef.set({
-                    title: 'New Message from Admin',
-                    body: text,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-                console.log(`Message sent and notification pushed to ${recipientMobile}`);
-            } catch (error) {
-                console.error("Error sending message:", error);
-                showToast("Failed to send message.");
-            }
-        }
-
-        function openChatModal(userMobile) {
-            const modal = document.getElementById('chat-modal');
-            const content = document.getElementById('chat-modal-content');
-            const chatId = [userMobile, ADMIN_MOBILE].sort().join('_');
-            const chatMessages = chats[chatId] ? Object.values(chats[chatId].messages).sort((a,b) => a.timestamp - b.timestamp) : [];
-
-            content.innerHTML = `
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h3 class="text-xl font-bold">Chat with ${customers[userMobile]?.name || userMobile}</h3>
-                    <button onclick="document.getElementById('chat-modal').style.display='none'" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                </div>
-                <div id="chat-history-messages" class="flex-grow overflow-y-auto bg-gray-100 p-4 space-y-2 flex flex-col">
-                    ${chatMessages.map(msg => `
-                        <div class="chat-bubble p-2 rounded-lg ${msg.sender === ADMIN_MOBILE ? 'sent' : 'received'}">
-                            <p>${msg.text}</p>
-                        </div>
-                    `).join('')}
-                </div>
-                <form id="admin-chat-form" class="p-4 border-t flex gap-2">
-                    <input type="text" id="admin-chat-input" class="w-full border rounded-full px-4 py-2" placeholder="Type a message..." required autocomplete="off">
-                    <button type="submit" class="bg-indigo-600 text-white rounded-full p-2 w-10 h-10 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
-                    </button>
-                </form>
-            `;
-            modal.style.display = 'flex';
-            const chatHistory = document.getElementById('chat-history-messages');
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+            // 2. For my product status changes (approved/rejected)
+            const myProductsRef = db.ref('marketplaceProducts').orderByChild('sellerMobile').equalTo(currentUser.mobile);
+            myProductsRef.on('child_changed', (snapshot) => {
+                const product = snapshot.val();
+                const oldProduct = allProducts.find(p => p.id === product.id);
+                if (oldProduct && oldProduct.status !== product.status) {
+                    addNotification(`Update for '${product.title}': Status is now ${product.status.replace(/_/g, ' ')}.`);
+                    const index = allProducts.findIndex(p => p.id === product.id);
+                    if (index > -1) allProducts[index] = product;
+                }
+            });
+            sellerListeners.push({ ref: myProductsRef, event: 'child_changed' });
             
-            // Mark as read
-            unreadChats.delete(chatId);
-            updateAdminChatBadge();
+            // 3. For my transaction status changes (e.g., payout)
+            const myTransactionsRef = db.ref('transactions').orderByChild('sellerMobile').equalTo(currentUser.mobile);
+            myTransactionsRef.on('child_changed', (snapshot) => {
+                const transaction = snapshot.val();
+                const oldTransaction = allTransactions.find(t => t.id === transaction.id);
+                if (oldTransaction && oldTransaction.status !== 'payout_complete' && transaction.status === 'payout_complete') {
+                    const product = allProducts.find(p => p.id === transaction.productId);
+                    const productName = product ? product.title : 'your item';
+                    addNotification(`Payment received for the sale of '${productName}'.`);
+                    const index = allTransactions.findIndex(t => t.id === transaction.id);
+                    if (index > -1) allTransactions[index] = transaction;
+                }
+            });
+            sellerListeners.push({ ref: myTransactionsRef, event: 'child_changed' });
+        }
+        
+        // --- CHAT ---
+        function getChatId(otherUserMobile) {
+            return [currentUser.mobile, otherUserMobile].sort().join('_');
+        }
 
-            document.getElementById('admin-chat-form').addEventListener('submit', e => {
+        function openChat(otherUserMobile = ADMIN_MOBILE) {
+            const chatId = getChatId(otherUserMobile);
+            const otherUserName = "Admin";
+
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+
+            modalContent.innerHTML = `
+                <div class="flex flex-col chat-modal">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <h3 class="font-bold">Chat with ${otherUserName}</h3>
+                        <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="text-2xl">&times;</button>
+                    </div>
+                    <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto bg-gray-100"></div>
+                    <form id="chat-form" class="p-4 border-t flex gap-2">
+                        <input type="text" id="chat-input" class="w-full border rounded-full px-4 py-2" placeholder="Type a message..." required autocomplete="off">
+                        <button type="submit" class="bg-indigo-600 text-white rounded-full p-2 w-10 h-10 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+                        </button>
+                    </form>
+                </div>
+            `;
+            modalContainer.classList.remove('hidden');
+
+            const chatMessagesDiv = document.getElementById('chat-messages');
+            const chatForm = document.getElementById('chat-form');
+
+            const messagesRef = db.ref(`chats/${chatId}/messages`);
+            messagesRef.on('child_added', snapshot => {
+                const msg = snapshot.val();
+                const bubble = document.createElement('div');
+                bubble.textContent = msg.text;
+                bubble.className = `chat-bubble ${msg.sender === currentUser.mobile ? 'sent' : 'received'}`;
+                chatMessagesDiv.appendChild(bubble);
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+            });
+
+            chatForm.addEventListener('submit', e => {
                 e.preventDefault();
-                const input = document.getElementById('admin-chat-input');
+                const input = document.getElementById('chat-input');
                 const text = input.value.trim();
                 if (text) {
-                    sendMessageToUser(chatId, text, userMobile);
+                    sendMessage(chatId, text);
                     input.value = '';
                 }
             });
         }
-        window.openChatModal = openChatModal;
+        
+        async function sendMessage(chatId, text) {
+            const messagesRef = db.ref(`chats/${chatId}/messages`);
+            await messagesRef.push({
+                text: text,
+                sender: currentUser.mobile,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
 
-
-        function openChatList() {
-             const modal = document.getElementById('chat-modal');
-             const content = document.getElementById('chat-modal-content');
-             const chatEntries = Object.entries(chats);
-
-             content.innerHTML = `
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h3 class="text-xl font-bold">Conversations</h3>
-                    <button onclick="document.getElementById('chat-modal').style.display='none'" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                </div>
-                <div class="overflow-y-auto">
-                    ${chatEntries.length > 0 ? chatEntries.map(([chatId, chatData]) => {
-                        const userMobile = chatId.replace(ADMIN_MOBILE, '').replace('_', '');
-                        const lastMsg = Object.values(chatData.messages || {}).sort((a,b) => b.timestamp - a.timestamp)[0];
-                        return `
-                        <div onclick="openChatModal('${userMobile}')" class="p-4 border-b hover:bg-slate-50 cursor-pointer ${unreadChats.has(chatId) ? 'font-bold' : ''}">
-                            <p>${customers[userMobile]?.name || userMobile}</p>
-                            <p class="text-sm text-slate-500 truncate">${lastMsg ? lastMsg.text : 'No messages yet'}</p>
-                        </div>
-                        `
-                    }).join('') : '<p class="p-8 text-center text-slate-500">No conversations yet.</p>'}
-                </div>
-             `;
-             modal.style.display = 'flex';
-        }
-
-        // --- Settings Page Logic ---
-        async function saveCommissionSettings(e) {
-            e.preventDefault();
-            const saleComm = document.getElementById('default-sale-commission').value;
-            const rentComm = document.getElementById('default-rent-commission').value;
-            try {
-                await db.ref('marketplaceSettings').update({
-                    defaultSaleCommission: parseFloat(saleComm),
-                    defaultRentCommission: parseFloat(rentComm)
-                });
-                showToast("Default commissions saved!");
-            } catch (error) {
-                showToast("Error saving settings.", 4000);
-            }
-        }
-
-        async function savePromoCode(e) {
-            e.preventDefault();
-            const id = document.getElementById('promo-id').value || Date.now();
-            const code = document.getElementById('promo-code').value.toUpperCase().trim();
-            if (!code) {
-                showToast("Promo code cannot be empty.");
-                return;
-            }
-            const promo = {
-                id: id.toString(),
-                code: code,
-                discountType: document.getElementById('promo-type').value,
-                discountValue: parseFloat(document.getElementById('promo-value').value) || 0,
-                minOrderValue: parseFloat(document.getElementById('promo-min-order').value) || null,
-                isActive: true
-            };
-            try {
-                await db.ref('marketplaceSettings/promoCodes/' + promo.id).set(promo);
-                showToast("Promo code saved!");
-                e.target.reset();
-            } catch (error) {
-                showToast("Error saving promo code.", 4000);
-            }
+            // Also send a notification to the admin
+            const adminNotifRef = db.ref('adminNotifications').push();
+            await adminNotifRef.set({
+                type: 'new_message',
+                from: currentUser.mobile,
+                fromName: document.getElementById('customer-name-display').textContent,
+                text: text,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
         }
         
-        async function savePromotionSettings(e) {
-            e.preventDefault();
-            const message = document.getElementById('promotion-message').value.trim();
-            const isActive = document.getElementById('promotion-active').checked;
+        function setupChatListener() {
+             const chatId = getChatId(ADMIN_MOBILE);
+             const messagesRef = db.ref(`chats/${chatId}/messages`).orderByChild('timestamp').startAt(Date.now());
+             chatListener = messagesRef;
+             messagesRef.on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                if(msg && msg.sender !== currentUser.mobile){
+                   addNotification("You have a new message from Admin.");
+                }
+             });
+        }
+        
+        // --- CART LOGIC ---
+        function updateCartBadge() {
+            const badge = document.getElementById('cart-badge');
+            badge.textContent = cart.length;
+            badge.classList.toggle('hidden', cart.length === 0);
+        }
+
+        function showRentalModal(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
             
-            if (isActive && !message) {
-                showToast("Please enter a message before activating the promotion.", 4000);
+            let rentalDays = 1;
+            const rentPrice = parseFloat(product.rentPrice) || 0;
+            const securityDeposit = parseFloat(product.securityDeposit) || 0;
+            
+            const updateTotal = () => {
+                const totalRent = rentPrice * rentalDays;
+                const grandTotal = totalRent + securityDeposit;
+                document.getElementById('rental-total-rent').textContent = `₹${totalRent.toFixed(2)}`;
+                document.getElementById('rental-grand-total').textContent = `₹${grandTotal.toFixed(2)}`;
+            };
+
+            modalContent.innerHTML = `
+                <div class="flex flex-col p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg">Rent Item: ${product.title}</h3>
+                            <p class="text-sm text-gray-500">Price: ₹${rentPrice.toFixed(2)}/day</p>
+                        </div>
+                        <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="text-2xl">&times;</button>
+                    </div>
+
+                    <div class="my-6 space-y-4">
+                        <div class="flex items-center justify-center gap-4">
+                            <label for="rental-days" class="font-semibold">Rental Duration (days):</label>
+                            <div class="flex items-center gap-2">
+                                <button id="decrement-days" class="bg-gray-200 w-8 h-8 rounded-full font-bold text-lg">-</button>
+                                <input type="number" id="rental-days" value="${rentalDays}" min="1" class="w-16 text-center border rounded-md p-2">
+                                <button id="increment-days" class="bg-gray-200 w-8 h-8 rounded-full font-bold text-lg">+</button>
+                            </div>
+                        </div>
+
+                        <div class="text-right space-y-1 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm">Rental Total: <span id="rental-total-rent" class="font-semibold"></span></p>
+                            <p class="text-sm">Security Deposit: <span class="font-semibold">₹${securityDeposit.toFixed(2)}</span></p>
+                            <p class="text-lg font-bold border-t pt-1 mt-1">Grand Total: <span id="rental-grand-total" class="font-semibold"></span></p>
+                        </div>
+                    </div>
+
+                    <button id="confirm-rent-btn" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700">Confirm & Add to Cart</button>
+                </div>
+            `;
+            modalContainer.classList.remove('hidden');
+            
+            const daysInput = document.getElementById('rental-days');
+            
+            document.getElementById('decrement-days').onclick = () => {
+                let currentDays = parseInt(daysInput.value);
+                if (currentDays > 1) {
+                    rentalDays = currentDays - 1;
+                    daysInput.value = rentalDays;
+                    updateTotal();
+                }
+            };
+            
+            document.getElementById('increment-days').onclick = () => {
+                let currentDays = parseInt(daysInput.value);
+                rentalDays = currentDays + 1;
+                daysInput.value = rentalDays;
+                updateTotal();
+            };
+            
+            daysInput.onchange = () => {
+                rentalDays = parseInt(daysInput.value) || 1;
+                if (rentalDays < 1) rentalDays = 1;
+                daysInput.value = rentalDays;
+                updateTotal();
+            };
+
+            document.getElementById('confirm-rent-btn').onclick = () => {
+                const totalRent = rentPrice * rentalDays;
+                const cartItem = {
+                    ...product,
+                    cartItemType: 'rent',
+                    rentalDays: rentalDays,
+                    rentalTotal: totalRent,
+                    price: totalRent + securityDeposit, // for total calculation in cart
+                    securityDeposit: securityDeposit
+                };
+                cart.push(cartItem);
+                localStorage.setItem('marketplaceCart', JSON.stringify(cart));
+                updateCartBadge();
+                showToast(`${product.title} added to cart for ${rentalDays} day(s).`);
+                document.getElementById('modal-container').classList.add('hidden');
+            };
+
+            updateTotal(); // Initial calculation
+        }
+
+        function addToCart(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+
+             if (product.stock !== undefined && product.stock <= 0) {
+                showToast("This item is out of stock.");
                 return;
             }
 
-            try {
-                await db.ref('marketplaceSettings/promotion').set({ message, isActive });
-                showToast('Promotion settings saved!');
-            } catch(err) {
-                console.error(err);
-                showToast('Error saving promotion settings.', 4000);
+            if (product.listingType === 'both') {
+                const modalContainer = document.getElementById('modal-container');
+                const modalContent = document.getElementById('modal-content');
+                modalContent.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-lg">Choose an option for ${product.title}</h3>
+                            <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="text-2xl">&times;</button>
+                        </div>
+                        <p class="text-sm text-gray-600 my-4">How would you like to add this item?</p>
+                        <div class="flex gap-4">
+                            <button id="buy-option-btn" class="flex-1 bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700">Buy (₹${product.price})</button>
+                            <button id="rent-option-btn" class="flex-1 bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700">Rent (₹${product.rentPrice}/day)</button>
+                        </div>
+                    </div>
+                `;
+                modalContainer.classList.remove('hidden');
+
+                document.getElementById('buy-option-btn').onclick = () => {
+                    const cartItem = { ...product, cartItemType: 'sale', quantity: 1 };
+                    cart.push(cartItem);
+                    localStorage.setItem('marketplaceCart', JSON.stringify(cart));
+                    updateCartBadge();
+                    showToast(`${product.title} added to cart for sale.`);
+                    modalContainer.classList.add('hidden');
+                };
+                document.getElementById('rent-option-btn').onclick = () => {
+                    showRentalModal(productId);
+                };
+            } else if (product.listingType === 'sale') {
+                const cartItem = { ...product, cartItemType: 'sale', quantity: 1 };
+                cart.push(cartItem);
+                localStorage.setItem('marketplaceCart', JSON.stringify(cart));
+                updateCartBadge();
+                showToast(`${product.title} added to cart for sale.`);
+            } else if (product.listingType === 'rent') {
+                showRentalModal(productId);
             }
         }
 
-        async function togglePromoStatus(id) {
-            const promo = marketplaceSettings.promoCodes[id];
-            if (promo) {
-                await db.ref(`marketplaceSettings/promoCodes/${id}/isActive`).set(!promo.isActive);
-                showToast(`Promo code ${!promo.isActive ? 'activated' : 'deactivated'}.`);
+        function renderCartModal() {
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+            
+            if (cart.length === 0) {
+                showToast("Your cart is empty.");
+                return;
             }
-        }
-        window.togglePromoStatus = togglePromoStatus;
 
-        async function deletePromo(id) {
-            if (confirm("Are you sure you want to delete this promo code?")) {
-                await db.ref(`marketplaceSettings/promoCodes/${id}`).remove();
-                showToast("Promo code deleted.");
+            modalContent.innerHTML = `
+                <div class="flex flex-col">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <h3 class="font-bold text-lg">Your Cart</h3>
+                        <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="text-2xl">&times;</button>
+                    </div>
+                    <div id="cart-items-list" class="p-4 space-y-3 overflow-y-auto max-h-96">
+                        <!-- Items will be rendered by updateCartTotals -->
+                    </div>
+                    <div class="p-4 border-t space-y-2">
+                        <div id="promo-area">
+                            <label for="promo-code-input" class="text-sm font-medium">Promo Code</label>
+                            <div class="flex gap-2 mt-1">
+                                <input type="text" id="promo-code-input" class="w-full border rounded-md px-3 py-1" placeholder="Enter code">
+                                <button id="apply-promo-btn" class="bg-gray-600 text-white font-semibold px-4 rounded-md text-sm">Apply</button>
+                            </div>
+                        </div>
+                        <div id="applied-promo-area" class="hidden"></div>
+                    </div>
+                    <div class="p-4 border-t space-y-1">
+                        <div class="flex justify-between"><span>Subtotal</span><span id="cart-subtotal">₹0.00</span></div>
+                        <div id="cart-discount-row" class="flex justify-between text-red-600 hidden"><span>Discount</span><span id="cart-discount">- ₹0.00</span></div>
+                        <div class="flex justify-between font-bold text-xl"><span>Grand Total</span><span id="cart-grand-total">₹0.00</span></div>
+                        <button onclick="placeOrder()" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 mt-2">Place Order</button>
+                    </div>
+                </div>
+            `;
+            modalContainer.classList.remove('hidden');
+            document.getElementById('apply-promo-btn').addEventListener('click', applyPromoCode);
+            updateCartTotals();
+        }
+        
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('marketplaceCart', JSON.stringify(cart));
+            updateCartBadge();
+            appliedPromo = null; // Reset promo when cart changes
+            updateCartTotals();
+        }
+
+        function showOrderConfirmation() {
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+
+            modalContent.innerHTML = `
+                <div class="text-center p-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-4 text-xl font-bold">Thank You!</h3>
+                    <p class="mt-2 text-gray-600">Your order placed successfully. Pick your order from Navrose shop.</p>
+                    <p class="mt-1 text-gray-600">Contact no. <a href="tel:7696272780" class="text-indigo-600 font-semibold">7696272780</a></p>
+                    <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="mt-6 bg-indigo-600 text-white font-semibold py-2 px-8 rounded-lg">Close</button>
+                </div>
+            `;
+            modalContainer.classList.remove('hidden');
+        }
+
+        async function placeOrder() {
+            if (cart.length === 0) return;
+
+            const hasRental = cart.some(item => item.cartItemType === 'rent');
+            if (hasRental) {
+                const confirmationMessage = "Attention: By proceeding, you agree that if the rented garment is damaged or not returned on time, charges will be deducted from your security deposit.";
+                const userConfirmed = confirm(confirmationMessage);
+                if (!userConfirmed) {
+                    showToast("Order cancelled.");
+                    return;
+                }
             }
-        }
-        window.deletePromo = deletePromo;
 
-        // --- Ledger Sorting ---
-        function setLedgerSort(column) {
-            if (ledgerSortState.column === column) {
-                ledgerSortState.direction = ledgerSortState.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                ledgerSortState.column = column;
-                ledgerSortState.direction = (column === 'date') ? 'desc' : 'asc';
+            for (const product of cart) {
+                 if (product.cartItemType === 'sale' && product.stock !== undefined && product.stock < product.quantity) {
+                    showToast(`Not enough stock for ${product.title}. Please adjust your cart.`);
+                    return;
+                }
             }
-            renderPayments();
-        }
-        window.setLedgerSort = setLedgerSort;
 
-        function updateLedgerSortIndicators() {
-            appContent.querySelectorAll('.sortable-header').forEach(th => {
-                th.classList.remove('sort-asc', 'sort-desc');
-                if (th.getAttribute('onclick').includes(`'${ledgerSortState.column}'`)) {
-                    th.classList.add(ledgerSortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+            const subtotal = cart.reduce((sum, p) => {
+                if (p.cartItemType === 'rent') return sum + p.rentalTotal + (p.securityDeposit || 0);
+                return sum + ((parseFloat(p.price) || 0) * (p.quantity || 1));
+            }, 0);
+            
+            const discountableSubtotal = cart.reduce((sum, p) => {
+                if (p.cartItemType === 'rent') return sum + p.rentalTotal; // Exclude security deposit
+                return sum + ((parseFloat(p.price) || 0) * (p.quantity || 1));
+            }, 0);
+
+            let totalDiscount = 0;
+            if (appliedPromo) {
+                if (appliedPromo.discountType === 'percentage') {
+                    totalDiscount = discountableSubtotal * (appliedPromo.discountValue / 100);
+                } else {
+                    totalDiscount = appliedPromo.discountValue;
+                }
+                totalDiscount = Math.min(totalDiscount, discountableSubtotal);
+            }
+
+            for (const product of cart) {
+                const itemSubtotal = product.cartItemType === 'rent' ? product.rentalTotal + (product.securityDeposit || 0) : (parseFloat(product.price) || 0) * (product.quantity || 1);
+                const itemDiscountableAmount = product.cartItemType === 'rent' ? product.rentalTotal : itemSubtotal;
+                
+                const proportionalDiscount = discountableSubtotal > 0 ? (itemDiscountableAmount / discountableSubtotal) * totalDiscount : 0;
+                const finalItemPrice = itemSubtotal - proportionalDiscount;
+                
+                const defaultSaleComm = marketplaceSettings.defaultSaleCommission || 10;
+                const defaultRentComm = marketplaceSettings.defaultRentCommission || 15;
+                const saleComm = product.saleCommissionPercentage ?? defaultSaleComm;
+                const rentComm = product.rentCommissionPercentage ?? defaultRentComm;
+
+                let commission = 0;
+                if (product.cartItemType === 'sale') {
+                    const discountedSalePrice = itemDiscountableAmount - proportionalDiscount;
+                    commission = discountedSalePrice * (saleComm / 100);
+                } else if (product.cartItemType === 'rent') {
+                    const discountedRentPart = itemDiscountableAmount - proportionalDiscount;
+                    commission = discountedRentPart * (rentComm / 100);
+                }
+                
+                const transaction = {
+                    id: db.ref('transactions').push().key,
+                    productId: product.id,
+                    buyerMobile: currentUser.mobile,
+                    sellerMobile: product.sellerMobile,
+                    amountPaid: finalItemPrice,
+                    promoCode: appliedPromo ? appliedPromo.code : null,
+                    discountApplied: proportionalDiscount,
+                    commission: commission,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    type: product.cartItemType,
+                    quantity: product.quantity || null,
+                };
+                 if (product.cartItemType === 'rent') {
+                    transaction.rentalDays = product.rentalDays;
+                    transaction.rentalTotal = product.rentalTotal;
+                    transaction.securityDeposit = product.securityDeposit || 0;
+                    transaction.status = 'rented_out'; // Status indicates active rental
+                    transaction.depositStatus = 'held';
+                    // Note: rentalHandoverTimestamp is NOT set here. Admin sets it.
+                } else {
+                    transaction.status = 'pending_handover'; // New status for sales
+                }
+                
+                await db.ref('transactions/' + transaction.id).set(transaction);
+                 
+                // If it's a sale, decrease stock
+                if (product.cartItemType === 'sale') {
+                    const productRef = db.ref(`marketplaceProducts/${product.id}`);
+                    const newStock = firebase.database.ServerValue.increment(-(product.quantity || 1));
+                    await productRef.update({ stock: newStock });
+                }
+                
+                // Admin is notified of ALL orders now
+                const adminNotifRef = db.ref('adminNotifications').push();
+                await adminNotifRef.set({
+                    type: 'new_order',
+                    from: currentUser.mobile,
+                    fromName: document.getElementById('customer-name-display').textContent,
+                    text: `New ${product.cartItemType} order for ${product.title}`,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+            
+            cart = [];
+            appliedPromo = null;
+            localStorage.removeItem('marketplaceCart');
+            updateCartBadge();
+            showOrderConfirmation();
+        }
+
+        function requestToTry(productId, productTitle) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+
+            const message = encodeURIComponent(`Hi, I would like to request a trial for the product: ${productTitle} (ID: ${productId}). My mobile number is ${currentUser.mobile}.`);
+            window.open(`https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`, '_blank');
+        }
+
+        function renderMyActiveRentals() {
+            const rentalSection = document.getElementById('active-rentals-section');
+            if (!currentUser) return;
+
+            const myRentals = allTransactions.filter(t => t.buyerMobile === currentUser.mobile && t.type === 'rent' && t.status === 'rented_out');
+
+            if (myRentals.length === 0) {
+                rentalSection.innerHTML = '';
+                if(rentalCountdownInterval) clearInterval(rentalCountdownInterval);
+                return;
+            }
+
+            const rentalCards = myRentals.map(t => {
+                if (t.rentalHandoverTimestamp) {
+                     const startDate = new Date(t.rentalHandoverTimestamp);
+                     const dueDate = new Date(startDate);
+                     dueDate.setDate(startDate.getDate() + t.rentalDays);
+
+                    return `
+                        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-amber-500 mb-2">
+                            <div class="flex justify-between items-start">
+                                <p class="font-bold">Rented: ${allProducts.find(p => p.id === t.productId)?.title || 'Item'}</p>
+                                <span class="text-sm font-semibold text-gray-600">Deposit: ₹${(t.securityDeposit || 0).toFixed(2)}</span>
+                            </div>
+                            <p class="text-sm">Due Date: ${dueDate.toLocaleDateString()}</p>
+                            <div class="text-lg font-bold mt-1" data-due-date="${dueDate.toISOString()}"></div>
+                        </div>
+                    `;
+                } else {
+                     return `
+                        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500 mb-2">
+                            <div class="flex justify-between items-start">
+                                <p class="font-bold">Rented: ${allProducts.find(p => p.id === t.productId)?.title || 'Item'}</p>
+                                 <span class="text-sm font-semibold text-gray-600">Deposit: ₹${(t.securityDeposit || 0).toFixed(2)}</span>
+                            </div>
+                            <p class="text-md font-bold text-blue-600 mt-2">Awaiting Pickup from Shop</p>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            rentalSection.innerHTML = `<h2 class="text-lg font-bold mb-2">My Active Rentals</h2>${rentalCards}`;
+            
+            updateCountdownTimers();
+            if (rentalCountdownInterval) clearInterval(rentalCountdownInterval);
+            rentalCountdownInterval = setInterval(updateCountdownTimers, 1000);
+        }
+
+        function updateCountdownTimers() {
+            document.querySelectorAll('[data-due-date]').forEach(el => {
+                const dueDate = new Date(el.dataset.dueDate);
+                const now = new Date();
+                const diff = dueDate - now;
+
+                if (diff < 0) {
+                    el.innerHTML = `<span class="text-red-600">Overdue by ${formatDuration(Math.abs(diff))}</span>`;
+                } else {
+                    el.innerHTML = `<span class="text-green-600">${formatDuration(diff)} remaining</span>`;
                 }
             });
+        }
+        
+        function formatDuration(ms) {
+            let seconds = Math.floor(ms / 1000);
+            let minutes = Math.floor(seconds / 60);
+            let hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            hours %= 24;
+            minutes %= 60;
+            seconds %= 60;
+
+            if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+            if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+            if (minutes > 0) return `${minutes}m ${seconds}s`;
+            return `${seconds}s`;
+        }
+        
+        // --- PROMO CODE LOGIC ---
+        function updateCartTotals() {
+            const itemsListDiv = document.getElementById('cart-items-list');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const discountRowEl = document.getElementById('cart-discount-row');
+            const discountEl = document.getElementById('cart-discount');
+            const grandTotalEl = document.getElementById('cart-grand-total');
+
+            let subtotal = cart.reduce((sum, p) => {
+                if (p.cartItemType === 'rent') return sum + p.rentalTotal + (p.securityDeposit || 0);
+                return sum + ((parseFloat(p.price) || 0) * (p.quantity || 1));
+            }, 0);
+            
+            let discountableSubtotal = cart.reduce((sum, p) => {
+                if (p.cartItemType === 'rent') return sum + p.rentalTotal; // Exclude security deposit
+                return sum + ((parseFloat(p.price) || 0) * (p.quantity || 1));
+            }, 0);
+
+            let discount = 0;
+            if (appliedPromo) {
+                if (appliedPromo.discountType === 'percentage') {
+                    discount = discountableSubtotal * (appliedPromo.discountValue / 100);
+                } else {
+                    discount = appliedPromo.discountValue;
+                }
+                discount = Math.min(discount, discountableSubtotal); // Discount cannot exceed subtotal
+            }
+
+            // Render cart items
+             itemsListDiv.innerHTML = cart.map((p, index) => {
+                let itemHTML = '';
+                 const itemSubtotal = p.cartItemType === 'rent' ? p.rentalTotal + (p.securityDeposit || 0) : (parseFloat(p.price) || 0) * (p.quantity || 1);
+
+                if (p.cartItemType === 'rent') {
+                    itemHTML = `<div>
+                            <p class="font-semibold">${p.title} (Rent)</p>
+                            <p class="text-sm text-gray-600">${p.rentalDays} day(s) @ ₹${p.rentPrice}/day + ₹${(p.securityDeposit || 0).toFixed(2)} deposit</p>
+                            <p class="text-sm font-bold">Item Total: ₹${itemSubtotal.toFixed(2)}</p>
+                        </div>`;
+                } else { // 'sale'
+                    itemHTML = `<div>
+                            <p class="font-semibold">${p.title} (Sale)</p>
+                            <p class="text-sm text-gray-600">${p.quantity || 1} x ₹${p.price.toFixed(2)} = ₹${itemSubtotal.toFixed(2)}</p>
+                        </div>`;
+                }
+                return `<div class="flex justify-between items-center border-b pb-2">${itemHTML}<button onclick="removeFromCart(${index})" class="text-red-500 text-xs font-semibold">Remove</button></div>`;
+            }).join('');
+
+            subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
+            discountRowEl.classList.toggle('hidden', discount <= 0);
+            discountEl.textContent = `- ₹${discount.toFixed(2)}`;
+            grandTotalEl.textContent = `₹${(subtotal - discount).toFixed(2)}`;
+        }
+
+        async function applyPromoCode() {
+            const input = document.getElementById('promo-code-input');
+            const code = input.value.trim().toUpperCase();
+            if (!code) return;
+
+            const promoCodes = marketplaceSettings.promoCodes || {};
+            const promo = Object.values(promoCodes).find(p => p.code === code);
+            
+            const discountableSubtotal = cart.reduce((sum, p) => {
+                if (p.cartItemType === 'rent') return sum + p.rentalTotal;
+                return sum + ((parseFloat(p.price) || 0) * (p.quantity || 1));
+            }, 0);
+
+            if (!promo || !promo.isActive) {
+                showToast("Invalid or expired promo code.");
+                appliedPromo = null;
+            } else if (promo.minOrderValue && discountableSubtotal < promo.minOrderValue) {
+                showToast(`This code requires a minimum order of ₹${promo.minOrderValue}.`);
+                appliedPromo = null;
+            } else {
+                appliedPromo = promo;
+                showToast(`Promo code "${promo.code}" applied!`);
+                const promoArea = document.getElementById('promo-area');
+                const appliedPromoArea = document.getElementById('applied-promo-area');
+                promoArea.classList.add('hidden');
+                appliedPromoArea.classList.remove('hidden');
+                appliedPromoArea.innerHTML = `
+                    <div class="flex justify-between items-center bg-green-50 text-green-700 p-2 rounded-md">
+                        <p class="text-sm font-semibold">Code Applied: <strong>${promo.code}</strong></p>
+                        <button id="remove-promo-btn" class="text-xs font-bold">&times; Remove</button>
+                    </div>
+                `;
+                document.getElementById('remove-promo-btn').addEventListener('click', () => {
+                    appliedPromo = null;
+                    promoArea.classList.remove('hidden');
+                    appliedPromoArea.classList.add('hidden');
+                    input.value = '';
+                    updateCartTotals();
+                    showToast("Promo code removed.");
+                });
+            }
+            updateCartTotals();
+        }
+
+        // --- SELLER EDIT/DELETE ---
+        async function deleteMyProduct(productId) {
+            if (confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {
+                try {
+                    await db.ref('marketplaceProducts/' + productId).remove();
+                    showToast("Listing deleted successfully.");
+                } catch (error) {
+                    showToast("Error deleting listing. Please try again.");
+                    console.error("Error deleting product:", error);
+                }
+            }
+        }
+
+        function openEditForm(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) { showToast("Product not found."); return; }
+
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+
+            const listingTypeRadios = ['sale', 'rent', 'both'].map(type => `<label class="flex items-center"><input type="radio" name="editListingType" value="${type}" class="mr-2" ${product.listingType === type ? 'checked' : ''}> ${type.charAt(0).toUpperCase() + type.slice(1)}</label>`).join('');
+
+            modalContent.innerHTML = `
+            <form id="edit-item-form" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">Edit Item</h3>
+                    <button type="button" onclick="document.getElementById('modal-container').classList.add('hidden')" class="text-2xl">&times;</button>
+                </div>
+                <div><label for="edit-title" class="text-sm font-medium">Title</label><input type="text" id="edit-title" value="${product.title || ''}" class="mt-1 block w-full border rounded-md p-2" required></div>
+                <div><label for="edit-description" class="text-sm font-medium">Description</label><textarea id="edit-description" rows="3" class="mt-1 block w-full border rounded-md p-2">${product.description || ''}</textarea></div>
+                <div><label class="text-sm font-medium">Listing Type</label><div class="mt-2 flex gap-4">${listingTypeRadios}</div></div>
+                
+                <div id="edit-sale-price-div"><label for="edit-price" class="text-sm font-medium">Sale Price (₹)</label><input type="number" id="edit-price" class="mt-1 block w-full border rounded-md p-2" value="${product.price || ''}"></div>
+                <div id="edit-rent-price-div" class="space-y-2"><label for="edit-rentPrice" class="text-sm font-medium">Rent Price/day (₹)</label><input type="number" id="edit-rentPrice" value="${product.rentPrice || ''}" class="mt-1 block w-full border rounded-md p-2"><label for="edit-securityDeposit" class="text-sm font-medium">Security Deposit (₹)</label><input type="number" id="edit-securityDeposit" value="${product.securityDeposit || ''}" class="mt-1 block w-full border rounded-md p-2"></div>
+                <div><label for="edit-stock" class="text-sm font-medium">Stock</label><input type="number" id="edit-stock" value="${product.stock || 0}" class="mt-1 block w-full border rounded-md p-2"></div>
+                
+                <div class="flex justify-end gap-2 pt-4 border-t"><button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md">Save Changes</button></div>
+            </form>`;
+
+            modalContainer.classList.remove('hidden');
+
+            const editForm = document.getElementById('edit-item-form');
+            const toggleEditPrices = () => {
+                const type = editForm.querySelector('input[name="editListingType"]:checked').value;
+                document.getElementById('edit-sale-price-div').style.display = (type === 'sale' || type === 'both') ? 'block' : 'none';
+                document.getElementById('edit-rent-price-div').style.display = (type === 'rent' || type === 'both') ? 'block' : 'none';
+            };
+            
+            editForm.querySelectorAll('input[name="editListingType"]').forEach(radio => radio.addEventListener('change', toggleEditPrices));
+
+            editForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const updates = { 
+                    status: product.status,
+                    title: document.getElementById('edit-title').value,
+                    description: document.getElementById('edit-description').value,
+                    listingType: editForm.querySelector('input[name="editListingType"]:checked').value,
+                    price: (editForm.querySelector('input[name="editListingType"]:checked').value !== 'rent') ? parseFloat(document.getElementById('edit-price').value) || null : null,
+                    rentPrice: (editForm.querySelector('input[name="editListingType"]:checked').value !== 'sale') ? parseFloat(document.getElementById('edit-rentPrice').value) || null : null,
+                    securityDeposit: (editForm.querySelector('input[name="editListingType"]:checked').value !== 'sale') ? parseFloat(document.getElementById('edit-securityDeposit').value) || null : null,
+                    stock: parseInt(document.getElementById('edit-stock').value, 10) || 0
+                };
+
+                try {
+                    await db.ref('marketplaceProducts/' + productId).update(updates);
+                    showToast("Listing updated successfully.");
+                    modalContainer.classList.add('hidden');
+                } catch (error) {
+                    showToast("Error updating listing.");
+                }
+            });
+            toggleEditPrices();
+        }
+
+        async function displayPromotion() {
+            if (!db) return;
+            try {
+                const promoSnap = await db.ref('marketplaceSettings/promotion').once('value');
+                const promo = promoSnap.val();
+                if (promo && promo.isActive && promo.message) {
+                    document.getElementById('promotion-message-content').textContent = promo.message;
+                    document.getElementById('promotion-modal').classList.remove('hidden');
+                }
+            } catch(e) { console.error("Could not fetch promotion", e); }
         }
 
         // --- INITIALIZATION ---
@@ -1113,164 +1418,74 @@
                 db = firebase.database();
             } catch(e) { console.error(e); alert("Firebase connection failed."); }
 
-            tabs.forEach(tab => tab.addEventListener('click', () => switchView(tab.id.replace('tab-', ''))));
+            displayPromotion();
+
+            const savedUser = localStorage.getItem('loggedInUser');
+            if (savedUser) {
+                login(JSON.parse(savedUser).mobile);
+            }
             
-            // --- GLOBAL SEARCH LISTENER ---
-            const globalSearchInput = document.getElementById('global-admin-search');
-            const globalSearchResultsContainer = document.getElementById('global-search-results');
-
-            globalSearchInput.addEventListener('input', debounce((e) => {
-                const query = e.target.value.trim();
-                if (!query) {
-                    globalSearchResultsContainer.innerHTML = '';
-                    appContent.style.display = 'block'; // Show main content
-                    return;
-                }
-                const results = globalAdminSearch(query);
-                renderGlobalAdminSearchResults(results, query);
-                appContent.style.display = 'none'; // Hide main content
-            }, 300));
-
-            const dataRefs = {
-                marketplaceProducts: (snap) => { products = snap.val() || {}; },
-                transactions: (snap) => { transactions = Object.values(snap.val() || {}); },
-                customers: (snap) => {
-                    const customerList = Object.values(snap.val() || {});
-                    customers = customerList.reduce((obj, c) => { if(c.mobile) obj[c.mobile] = c; return obj; }, {});
-                },
-                adminNotifications: (snap) => {
-                    adminNotifications = Object.values(snap.val() || {}).sort((a,b) => b.timestamp - a.timestamp);
-                    unreadAdminNotifications = adminNotifications.length; // Simple count for now
-                    updateAdminNotificationBadge();
-                    renderAdminNotifications();
-                },
-                chats: (snap) => {
-                    chats = snap.val() || {};
-                    unreadChats.clear();
-                    Object.entries(chats).forEach(([chatId, chatData]) => {
-                        const lastMsg = Object.values(chatData.messages || {}).sort((a,b) => b.timestamp - a.timestamp)[0];
-                        if (lastMsg && lastMsg.sender !== ADMIN_MOBILE) {
-                            // In a real app, you'd check a "lastRead" timestamp
-                            unreadChats.add(chatId);
-                        }
-                    });
-                    updateAdminChatBadge();
-                },
-                marketplaceSettings: (snap) => {
-                    marketplaceSettings = snap.val() || { defaultSaleCommission: 10, defaultRentCommission: 15, promoCodes: {} };
-                }
-            };
+            cart = JSON.parse(localStorage.getItem('marketplaceCart')) || [];
+            updateCartBadge();
             
-            Object.entries(dataRefs).forEach(([refName, callback]) => {
-                db.ref(refName).on('value', snap => {
-                    callback(snap);
-                    const activeView = document.querySelector('.nav-button.active')?.id.replace('tab-','');
-                    if (activeView && renderFunctions[activeView] && !globalSearchInput.value.trim()) {
-                        renderFunctions[activeView]();
-                    }
-                });
-            });
+            document.getElementById('cart-btn').addEventListener('click', renderCartModal);
 
-            document.getElementById('notification-icon-btn').addEventListener('click', (e) => {
+            // Notification Bell
+            const bell = document.getElementById('notification-bell');
+            const dropdown = document.getElementById('notification-dropdown');
+            bell.addEventListener('click', (e) => {
                 e.stopPropagation();
-                document.getElementById('notification-dropdown').classList.toggle('hidden');
-                unreadAdminNotifications = 0; // Mark as read on open
-                updateAdminNotificationBadge();
-            });
-
-            document.getElementById('chat-icon-btn').addEventListener('click', openChatList);
-
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('#admin-notification-bell-container')) {
-                     document.getElementById('notification-dropdown').classList.add('hidden');
+                dropdown.classList.toggle('hidden');
+                if(!dropdown.classList.contains('hidden')) {
+                    unreadCount = 0;
+                    updateNotificationBadge();
+                    notifications.forEach(n => n.read = true);
                 }
             });
+            document.addEventListener('click', (e) => {
+                if (!bell.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+            
+            // Voice toggle
+            const voiceBtn = document.getElementById('voice-toggle-btn');
+            const updateVoiceIcon = () => {
+                voiceBtn.innerHTML = voiceEnabled 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-2-2m0 0l-2-2m2 2l-2 2m2-2l2-2" /></svg>`;
+            };
+            updateVoiceIcon();
+            voiceBtn.addEventListener('click', () => {
+                voiceEnabled = !voiceEnabled;
+                updateVoiceIcon();
+                showToast(`Voice notifications ${voiceEnabled ? 'enabled' : 'disabled'}.`);
+            });
+            
+            // T&C Link
+            document.getElementById('tnc-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('tnc-modal').classList.remove('hidden');
+            });
+            
+            // Chat FAB
+            document.getElementById('chat-fab').addEventListener('click', () => openChat());
 
-            window.openItemEditModal = (id) => { openProductEditModal(id); };
-            window.openProductEditModal = openProductEditModal;
-            window.saveProductChangesFromModal = saveProductChangesFromModal;
-            window.openEditStatusModalWrapper = openEditStatusModalWrapper;
-            window.openCustomerDetailModal = openCustomerDetailModal;
-
-            switchView('dashboard');
+            // Add listener to the tab content to handle dynamic forms
+            tabContent.addEventListener('submit', function(e) {
+                if (e.target && ['list-sale-form', 'list-rent-form', 'list-both-form'].includes(e.target.id)) {
+                    handleListSubmit(e);
+                }
+            });
         });
-
-        // --- NEW MODAL FUNCTIONS FOR SEARCH RESULTS ---
-        function openProductEditModal(productId) {
-            const product = products[productId];
-            if (!product) {
-                showToast("Product not found");
-                return;
-            }
-            const modal = document.getElementById('edit-modal');
-            const content = document.getElementById('edit-modal-content');
-            const statuses = ['pending_approval', 'approved', 'rejected', 'sold'];
-
-            content.innerHTML = `
-                <h3 class="font-bold text-lg mb-4">Edit Product: ${product.title}</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label for="product-status-select" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select id="product-status-select" class="form-select mt-1 w-full">
-                            ${statuses.map(s => `<option value="${s}" ${s === product.status ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
-                        </select>
-                    </div>
-                     <div>
-                        <label for="product-image-url" class="block text-sm font-medium text-gray-700">Image URL (Google Drive)</label>
-                        <input type="text" id="product-image-url" class="form-input mt-1 w-full" value="${product.imageUrl || ''}">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 mt-6">
-                    <button onclick="document.getElementById('edit-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded font-semibold">Cancel</button>
-                    <button onclick="saveProductChangesFromModal('${product.id}')" class="bg-indigo-600 text-white py-2 px-4 rounded font-semibold">Save</button>
-                </div>
-            `;
-            modal.style.display = 'flex';
-        }
-
-        async function saveProductChangesFromModal(productId) {
-            const newStatus = document.getElementById('product-status-select').value;
-            const newImageUrl = document.getElementById('product-image-url').value;
-            const updates = { status: newStatus, imageUrl: newImageUrl };
-            try {
-                await db.ref(`marketplaceProducts/${productId}`).update(updates);
-                showToast('Product updated.');
-                document.getElementById('edit-modal').style.display = 'none';
-            } catch (e) {
-                showToast('Error updating product.');
-                console.error(e);
-            }
-        }
         
-        function openCustomerDetailModal(customerMobile) {
-            const customer = customers[customerMobile];
-            if (!customer) return;
-
-            const modal = document.getElementById('edit-modal');
-            const content = document.getElementById('edit-modal-content');
-
-            const customerOrders = transactions.filter(t => t.buyerMobile === customerMobile || t.sellerMobile === customerMobile)
-                .sort((a,b) => b.timestamp - a.timestamp);
-
-            content.innerHTML = `
-                <h3 class="font-bold text-lg mb-4">Customer: ${customer.name}</h3>
-                <p class="text-sm text-gray-600">${customer.mobile}</p>
-                <h4 class="font-semibold mt-4 mb-2">Recent Transactions</h4>
-                <div class="max-h-60 overflow-y-auto border rounded-md">
-                    ${customerOrders.length > 0 ? customerOrders.map(t => `
-                        <div class="p-2 border-b">
-                            <p class="text-sm">${new Date(t.timestamp).toLocaleDateString()}: ${t.type} of ${products[t.productId]?.title || 'item'}</p>
-                            <p class="text-xs text-gray-500">Amount: ₹${(t.amountPaid || 0).toFixed(2)}</p>
-                        </div>
-                    `).join('') : '<p class="p-2 text-sm text-gray-500">No transactions found.</p>'}
-                </div>
-                <div class="flex justify-end mt-4">
-                     <button onclick="document.getElementById('edit-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded font-semibold">Close</button>
-                </div>
-            `;
-            modal.style.display = 'flex';
-        }
-
+        // Make functions globally accessible
+        window.openEditForm = openEditForm;
+        window.deleteMyProduct = deleteMyProduct;
+        window.requestToTry = requestToTry;
+        window.addToCart = addToCart;
+        window.removeFromCart = removeFromCart;
+        window.placeOrder = placeOrder;
     </script>
 
 
