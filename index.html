@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Promo code chat"><meta charset="UTF-8">
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Listing, ledger, search "><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
   "imports": {}
 }</script></head><body>
+
 
 
 
@@ -21,19 +22,44 @@
         .modal { background-color: rgba(0,0,0,0.5); }
         .table-container { max-height: 70vh; overflow-y: auto; }
         thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
-        .sortable-header { cursor: pointer; user-select: none; }
-        .sortable-header.sort-asc::after { content: ' ▲'; }
-        .sortable-header.sort-desc::after { content: ' ▼'; }
+        .sortable-header { cursor: pointer; user-select: none; position: relative; padding-right: 20px; }
+        .sortable-header::after {
+            content: ' '; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            width: 1em; height: 1em; opacity: 0.4;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41zm255-105L177 64c-9.4-9.4-24.6-9.4-33.9 0L24 183c-15.1-15.1-4.4-41 17-41h238c21.4 0 32.1 25.9 17-41z'/%3E%3C/svg%3E");
+            background-size: contain; background-repeat: no-repeat;
+        }
+        .sortable-header.sort-asc::after {
+            opacity: 1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M279 224H41c-21.4 0-32.1-25.9-17-41L143 64c9.4-9.4 24.6-9.4 33.9 0l119 119c15.2 15.1 4.5 41-16.9 41z'/%3E%3C/svg%3E");
+        }
+        .sortable-header.sort-desc::after {
+            opacity: 1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41z'/%3E%3C/svg%3E");
+        }
         .chat-bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; }
         .chat-bubble.sent { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
         .chat-bubble.received { background-color: #4f46e5; color: white; align-self: flex-end; }
-        .form-input, .form-select { border-color: #d1d5db; border-radius: 0.375rem; padding: 0.5rem 0.75rem; width: 100%; }
+        .form-input, .form-select, .form-textarea { border-color: #d1d5db; border-radius: 0.375rem; padding: 0.5rem 0.75rem; width: 100%; }
+        @media print {
+            body { padding: 1rem !important; background-color: #fff !important; }
+            .no-print, nav, header, .modal { display: none !important; }
+            main { padding: 0 !important; }
+            .print-area { box-shadow: none !important; border: none !important; }
+            .table-container { max-height: none !important; overflow: visible !important; border: none !important; }
+        }
     </style>
 
 
     <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-6">
+        <header class="flex justify-between items-center mb-6 no-print">
             <h1 class="text-3xl font-bold text-slate-800">Marketplace Admin</h1>
+            <div class="flex-grow max-w-lg mx-4 relative">
+                <input type="search" id="global-admin-search" placeholder="Search products, customers, orders..." class="w-full pl-10 pr-4 py-2 border rounded-full bg-slate-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                </div>
+            </div>
             <div class="flex items-center gap-4">
                 <div id="admin-chat-icon-container" class="relative">
                     <button id="chat-icon-btn" class="text-slate-600 hover:text-indigo-600">
@@ -52,7 +78,7 @@
             </div>
         </header>
 
-        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto no-print">
             <button id="tab-dashboard" class="nav-button active py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Dashboard</button>
             <button id="tab-listings" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Listings</button>
             <button id="tab-orders" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Order Management</button>
@@ -60,6 +86,8 @@
             <button id="tab-support" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Support &amp; Disputes</button>
             <button id="tab-settings" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Settings</button>
         </div>
+
+        <div id="global-search-results" class="mb-6"></div>
 
         <main id="app-content"></main>
     </div>
@@ -97,6 +125,9 @@
         let unreadChats = new Set();
         const ADMIN_MOBILE = "0000000000"; // Admin's own mobile number to identify sent messages
         const ADMIN_WHATSAPP_NUMBER = "917696272780";
+        
+        // Ledger state
+        let ledgerSortState = { column: 'date', direction: 'desc' };
 
         const ICONS = {
             phone: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>`,
@@ -125,6 +156,22 @@
             }
             return 'https://via.placeholder.com/150x100.png?text=Invalid+Link';
         };
+
+        const debounce = (func, delay) => {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        };
+
+        const highlightText = (text, query) => {
+            if (!query || !text) return String(text);
+            const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const re = new RegExp(`(${escapedQuery})`, 'gi');
+            return String(text).replace(re, '<span class="bg-yellow-200 font-bold rounded-sm">$1</span>');
+        };
         
         const renderFunctions = {
             dashboard: renderDashboard,
@@ -142,14 +189,108 @@
             renderFunctions[viewName]();
         }
 
+        // --- GLOBAL SEARCH FUNCTIONS ---
+        function globalAdminSearch(query) {
+            const lowerQuery = query.toLowerCase();
+            const results = {
+                products: [],
+                customers: [],
+                orders: []
+            };
+
+            // Search Products
+            Object.values(products).forEach(p => {
+                if ((p.title && p.title.toLowerCase().includes(lowerQuery)) || (p.description && p.description.toLowerCase().includes(lowerQuery))) {
+                    results.products.push(p);
+                }
+            });
+
+            // Search Customers
+            Object.values(customers).forEach(c => {
+                if ((c.name && c.name.toLowerCase().includes(lowerQuery)) || (c.mobile && c.mobile.includes(lowerQuery))) {
+                    results.customers.push(c);
+                }
+            });
+
+            // Search Orders (Transactions)
+            transactions.forEach(t => {
+                const productTitle = products[t.productId]?.title || '';
+                const buyerName = customers[t.buyerMobile]?.name || '';
+                const sellerName = customers[t.sellerMobile]?.name || '';
+                if (productTitle.toLowerCase().includes(lowerQuery) || buyerName.toLowerCase().includes(lowerQuery) || sellerName.toLowerCase().includes(lowerQuery)) {
+                    results.orders.push(t);
+                }
+            });
+
+            return results;
+        }
+
+        function renderGlobalAdminSearchResults(results, query) {
+            const container = document.getElementById('global-search-results');
+            let html = '';
+
+            if (results.products.length === 0 && results.customers.length === 0 && results.orders.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 p-4">No results found.</p>';
+                return;
+            }
+
+            if (results.products.length > 0) {
+                html += `<h3 class="text-lg font-semibold mb-2 px-2">Products</h3>`;
+                html += results.products.slice(0, 5).map(p => `
+                    <div class="p-3 border-b hover:bg-slate-100 cursor-pointer" onclick="openProductEditModal('${p.id}')">
+                        <p class="font-medium">${highlightText(p.title, query)}</p>
+                        <p class="text-sm text-gray-600">Seller: ${p.sellerName}</p>
+                    </div>
+                `).join('');
+            }
+
+            if (results.customers.length > 0) {
+                html += `<h3 class="text-lg font-semibold mt-4 mb-2 px-2">Customers</h3>`;
+                html += results.customers.slice(0, 5).map(c => `
+                    <div class="p-3 border-b hover:bg-slate-100 cursor-pointer" onclick="openCustomerDetailModal('${c.mobile}')">
+                        <p class="font-medium">${highlightText(c.name, query)} (${highlightText(c.mobile, query)})</p>
+                    </div>
+                `).join('');
+            }
+
+            if (results.orders.length > 0) {
+                html += `<h3 class="text-lg font-semibold mt-4 mb-2 px-2">Orders</h3>`;
+                html += results.orders.slice(0, 5).map(t => `
+                    <div class="p-3 border-b hover:bg-slate-100 cursor-pointer" onclick="openEditStatusModalWrapper('${t.id}')">
+                        <p class="font-medium">Order for ${highlightText(products[t.productId]?.title || 'N/A', query)}</p>
+                        <p class="text-sm text-gray-600">Buyer: ${highlightText(customers[t.buyerMobile]?.name || 'N/A', query)}</p>
+                    </div>
+                `).join('');
+            }
+            
+            container.innerHTML = `<div class="bg-white rounded-lg shadow">${html}</div>`;
+        }
+
+        function openEditStatusModalWrapper(transactionId) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (transaction) {
+                openEditStatusModal(transaction);
+            }
+        }
+
         // --- RENDER FUNCTIONS ---
         function renderDashboard() {
             const approvedCount = Object.values(products).filter(p => p.status === 'approved').length;
             const pendingCount = Object.values(products).filter(p => p.status === 'pending_approval').length;
-            const completedTransactions = transactions.filter(t => t.status === 'payout_complete' || t.status === 'delivered' || t.status === 'returned');
-            const totalRevenue = completedTransactions.reduce((sum, t) => sum + (parseFloat(t.amountPaid) || 0), 0);
-            const totalCommission = completedTransactions.reduce((sum, t) => sum + (parseFloat(t.commission) || 0), 0);
             const openDisputes = transactions.filter(t => t.status === 'dispute_raised').length;
+
+            const revenueTransactions = transactions.filter(t => t.status !== 'dispute_raised' && t.type !== 'deposit_return');
+            const totalRevenue = revenueTransactions.reduce((sum, t) => {
+                // For rentals, revenue is only the rental fee, not the security deposit
+                if (t.type === 'rent') return sum + (parseFloat(t.rentalTotal) || 0) - (parseFloat(t.discountApplied) || 0);
+                return sum + (parseFloat(t.amountPaid) || 0);
+            }, 0);
+            const totalCommission = revenueTransactions.reduce((sum, t) => sum + (parseFloat(t.commission) || 0), 0);
+            const depositsHeld = transactions.reduce((sum, t) => {
+                if(t.type === 'rent' && t.depositStatus !== 'returned') return sum + (parseFloat(t.securityDeposit) || 0);
+                return sum;
+            }, 0);
+
 
             appContent.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -157,37 +298,96 @@
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Pending Approval</h3><p class="text-3xl font-bold mt-2 text-yellow-600">${pendingCount}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Total Revenue</h3><p class="text-3xl font-bold mt-2">₹${totalRevenue.toFixed(2)}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Commission Earned</h3><p class="text-3xl font-bold mt-2 text-green-600">₹${totalCommission.toFixed(2)}</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Security Deposits Held</h3><p class="text-3xl font-bold mt-2 text-blue-600">₹${depositsHeld.toFixed(2)}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500">Open Disputes</h3><p class="text-3xl font-bold mt-2 text-red-600">${openDisputes}</p></div>
                 </div>
             `;
         }
 
-        function renderListings() {
-            const productList = Object.values(products);
-            const headers = [
-                { title: 'Seller', key: 'sellerName' },
-                { title: 'Product', key: 'title' },
-                { title: 'Status', key: 'status', format: (val) => {
-                    const statusText = (val || '').replace(/_/g, ' ');
-                    let colorClass = 'bg-gray-100 text-gray-800';
-                    if (val === 'sold') colorClass = 'bg-red-100 text-red-800';
-                    else if (val === 'approved') colorClass = 'bg-green-100 text-green-800';
-                    else if (val === 'pending_approval') colorClass = 'bg-yellow-100 text-yellow-800';
-                    else if (val === 'rejected') colorClass = 'bg-slate-200 text-slate-600';
-                    return `<span class="px-2 py-1 text-xs font-semibold rounded-full capitalize ${colorClass}">${statusText}</span>`;
-                }},
-                { title: 'Price', key: 'price', format: val => val ? `₹${val}`: 'N/A' },
-                { title: 'Rent/Day', key: 'rentPrice', format: val => val ? `₹${val}`: 'N/A' },
+        function renderListings(filterStatus = 'all') {
+            const subNavButtons = [
+                { status: 'all', label: 'All' },
+                { status: 'pending_approval', label: 'Pending' },
+                { status: 'approved', label: 'Approved' },
+                { status: 'rejected', label: 'Rejected' },
+                { status: 'sold', label: 'Sold' }
             ];
-            const actions = ['Edit', 'Approve', 'Reject', 'Delete'];
+
             appContent.innerHTML = `
                 <div>
-                    <h2 class="text-2xl font-bold mb-4">Manage Listings (${productList.length})</h2>
+                    <h2 class="text-2xl font-bold mb-4">Manage Listings</h2>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-4 overflow-x-auto" aria-label="Tabs">
+                            ${subNavButtons.map(btn => `
+                                <button data-filter="${btn.status}" class="sub-nav-button whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm ${filterStatus === btn.status ? 'active' : ''}">
+                                    ${btn.label}
+                                </button>
+                            `).join('')}
+                        </nav>
+                    </div>
                     <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                        ${createTable(productList, headers, actions, {grandTotalCols: ['price', 'rentPrice']})}
+                        <table class="w-full min-w-max">
+                            <thead>
+                                <tr class="border-b-2">
+                                    <th class="p-3 text-left text-sm font-semibold">Image</th>
+                                    <th class="p-3 text-left text-sm font-semibold">Product</th>
+                                    <th class="p-3 text-left text-sm font-semibold">Seller</th>
+                                    <th class="p-3 text-left text-sm font-semibold">Details</th>
+                                    <th class="p-3 text-left text-sm font-semibold">Status</th>
+                                    <th class="p-3 text-left text-sm font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             `;
+
+            document.querySelectorAll('.sub-nav-button').forEach(btn => {
+                btn.addEventListener('click', () => renderListings(btn.dataset.filter));
+            });
+
+            const productList = Object.values(products).filter(p => filterStatus === 'all' || p.status === filterStatus);
+            productList.sort((a, b) => new Date(b.listedDate) - new Date(a.listedDate));
+
+            const tableBody = appContent.querySelector('tbody');
+            if (productList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">No listings found for this filter.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = productList.map(p => {
+                const imageUrl = getGoogleDriveImageUrl(p.imageUrl);
+                const statusText = (p.status || '').replace(/_/g, ' ');
+                let statusClass = 'bg-gray-100 text-gray-800';
+                if (p.status === 'sold') statusClass = 'bg-red-100 text-red-800';
+                else if (p.status === 'approved') statusClass = 'bg-green-100 text-green-800';
+                else if (p.status === 'pending_approval') statusClass = 'bg-yellow-100 text-yellow-800';
+                else if (p.status === 'rejected') statusClass = 'bg-slate-200 text-slate-600';
+
+                let actionButtons = '';
+                if (p.status === 'pending_approval') {
+                    actionButtons += `<button onclick="handleAction('Approve', '${p.id}')" class="text-xs font-semibold text-green-600 hover:underline">Approve</button>`;
+                    actionButtons += `<button onclick="handleAction('Reject', '${p.id}')" class="text-xs font-semibold text-red-600 hover:underline">Reject</button>`;
+                }
+                actionButtons += `<button onclick="openItemEditModal('${p.id}')" class="text-xs font-semibold text-blue-600 hover:underline">Edit</button>`;
+                actionButtons += `<button onclick="handleAction('Delete', '${p.id}')" class="text-xs font-semibold text-red-600 hover:underline">Delete</button>`;
+                
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2"><img src="${imageUrl}" alt="${p.title}" class="w-20 h-16 object-cover rounded"></td>
+                        <td class="p-3"><p class="font-semibold">${p.title}</p><p class="text-xs text-gray-500">${p.description}</p></td>
+                        <td class="p-3 text-xs">${p.sellerName || 'N/A'}<br>${p.sellerMobile || ''}</td>
+                        <td class="p-3 text-xs">
+                            <strong>Type:</strong> ${p.listingType}<br>
+                            ${(p.price) ? `<strong>Sale:</strong> ₹${p.price}<br>` : ''}
+                            ${(p.rentPrice) ? `<strong>Rent:</strong> ₹${p.rentPrice}/day<br>` : ''}
+                        </td>
+                        <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full capitalize ${statusClass}">${statusText}</span></td>
+                        <td class="p-3"><div class="flex flex-col gap-1 items-start">${actionButtons}</div></td>
+                    </tr>
+                `;
+            }).join('');
         }
         
         function renderOrders() {
@@ -280,6 +480,7 @@
                             <th class="p-3 text-left text-sm font-semibold">Renter</th>
                             <th class="p-3 text-left text-sm font-semibold">Duration</th>
                             <th class="p-3 text-left text-sm font-semibold">Due Date</th>
+                             <th class="p-3 text-left text-sm font-semibold">Deposit</th>
                             <th class="p-3 text-left text-sm font-semibold">Status</th>
                             <th class="p-3 text-left text-sm font-semibold">Actions</th>
                         </tr></thead>
@@ -293,9 +494,12 @@
                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                 
                                 let statusText, statusColor;
-                                if (t.status === 'returned') {
-                                    statusText = 'Returned';
+                                if (t.status === 'returned' && t.depositStatus === 'returned') {
+                                    statusText = 'Closed';
                                     statusColor = 'text-green-600';
+                                } else if (t.status === 'returned') {
+                                    statusText = 'Returned, Deposit Pending';
+                                    statusColor = 'text-blue-600';
                                 } else if (diffDays > 0) {
                                     statusText = `Due in ${diffDays} day(s)`;
                                     statusColor = 'text-blue-600';
@@ -312,6 +516,10 @@
                                     variantInfo = ` <span class="text-xs text-gray-500">(${(t.selectedSize || '')}${(t.selectedSize && t.selectedColor) ? ', ' : ''}${(t.selectedColor || '')})</span>`;
                                 }
 
+                                const depositStatus = t.depositStatus === 'returned'
+                                    ? '<span class="text-green-600 font-semibold">Returned</span>'
+                                    : `<span class="text-amber-600 font-semibold">Held</span>`;
+
                                 return `
                                 <tr class="border-b hover:bg-gray-50">
                                     <td class="p-3 text-sm">${startDate.toLocaleDateString()}</td>
@@ -319,9 +527,11 @@
                                     <td class="p-3 text-sm">${customers[t.buyerMobile]?.name || t.buyerMobile}</td>
                                     <td class="p-3 text-sm">${t.rentalDays} day(s)</td>
                                     <td class="p-3 text-sm">${dueDate.toLocaleDateString()}</td>
+                                    <td class="p-3 text-sm">₹${(t.securityDeposit || 0).toFixed(2)} (${depositStatus})</td>
                                     <td class="p-3 text-sm font-semibold ${statusColor}">${statusText}</td>
-                                    <td class="p-3 text-sm">
-                                        ${t.status !== 'returned' ? `<button onclick="handleAction('Mark_Returned', '${t.id}')" class="font-semibold text-green-600 hover:underline">Mark Returned</button>` : ''}
+                                    <td class="p-3 text-sm space-x-2">
+                                        ${t.status !== 'returned' ? `<button onclick="handleAction('Mark_Returned', '${t.id}')" class="font-semibold text-blue-600 hover:underline">Mark Returned</button>` : ''}
+                                        ${t.depositStatus !== 'returned' ? `<button onclick="handleAction('Return_Deposit', '${t.id}')" class="font-semibold text-green-600 hover:underline">Return Deposit</button>` : ''}
                                     </td>
                                 </tr>
                                 `
@@ -333,25 +543,99 @@
         }
         
         function renderPayments() {
-            const payoutTransactions = transactions; // Show all transactions
-            const headers = [
-                { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
-                { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
-                { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
-                { title: 'Sale Amount', key: 'amountPaid', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
-                { title: 'Commission', key: 'commission', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
-                { title: 'Net Payout', key: 'netPayout', format: (val, item) => `₹${( (parseFloat(item.amountPaid) || 0) - (parseFloat(item.commission) || 0) ).toFixed(2)}`},
-                { title: 'Status', key: 'status', format: val => `<span class="font-semibold capitalize">${(val || '').replace(/_/g, ' ')}</span>` },
-            ];
-             const actions = ['Mark Paid', 'Edit'];
-             appContent.innerHTML = `
-                <div>
-                    <h2 class="text-2xl font-bold mb-4">Payment Management</h2>
-                    <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
-                         ${createTable(payoutTransactions, headers, actions, {grandTotalCols: ['amountPaid', 'commission', 'netPayout']})}
+            let ledgerItems = [];
+
+            transactions.forEach(t => {
+                const product = products[t.productId] || { title: 'Unknown' };
+                const buyer = customers[t.buyerMobile] || { name: t.buyerMobile };
+                const seller = customers[t.sellerMobile] || { name: t.sellerMobile };
+                const txDate = new Date(t.timestamp);
+                const commission = parseFloat(t.commission) || 0;
+
+                if (commission > 0) {
+                    ledgerItems.push({ date: txDate, description: `Commission from ${t.type} of '${product.title}' (Sold by ${seller.name})`, debit: 0, credit: commission, transactionId: t.id });
+                }
+                
+                if (t.status === 'payout_complete') {
+                    const payoutAmount = (t.type === 'sale' ? (parseFloat(t.amountPaid) || 0) : (parseFloat(t.rentalTotal) || 0)) - commission;
+                    if (payoutAmount > 0) {
+                        ledgerItems.push({ date: t.payoutDate ? new Date(t.payoutDate) : txDate, description: `Payout to ${seller.name} for '${product.title}'`, debit: payoutAmount, credit: 0, transactionId: t.id });
+                    }
+                }
+                
+                if (t.type === 'rent') {
+                    const deposit = parseFloat(t.securityDeposit) || 0;
+                    if (deposit > 0) {
+                        ledgerItems.push({ date: txDate, description: `Security deposit held from ${buyer.name} for '${product.title}'`, debit: 0, credit: deposit, isDeposit: true, transactionId: t.id });
+                        if (t.depositStatus === 'returned') {
+                            ledgerItems.push({ date: t.depositReturnDate ? new Date(t.depositReturnDate) : txDate, description: `Security deposit returned to ${buyer.name} for '${product.title}'`, debit: deposit, credit: 0, isDeposit: true, transactionId: t.id });
+                        }
+                    }
+                }
+            });
+
+            // Sorting logic
+            ledgerItems.sort((a, b) => {
+                let valA = a[ledgerSortState.column];
+                let valB = b[ledgerSortState.column];
+                const direction = ledgerSortState.direction === 'asc' ? 1 : -1;
+
+                if (ledgerSortState.column === 'description') {
+                    return valA.localeCompare(valB) * direction;
+                }
+                return (valA < valB ? -1 : 1) * direction;
+            });
+
+            const totalDebit = ledgerItems.reduce((sum, item) => sum + item.debit, 0);
+            const totalCredit = ledgerItems.reduce((sum, item) => sum + item.credit, 0);
+            const netProfit = ledgerItems.filter(i => !i.isDeposit).reduce((sum, item) => sum + item.credit - item.debit, 0);
+            
+            const rows = ledgerItems.map(item => `
+                <tr class="border-b ${item.isDeposit ? 'bg-slate-50 text-slate-600' : 'hover:bg-slate-50'}">
+                    <td class="p-3 whitespace-nowrap">${item.date.toLocaleDateString()}</td>
+                    <td class="p-3">${item.description}</td>
+                    <td class="p-3 text-right font-mono text-red-600">${item.debit > 0 ? `₹${item.debit.toFixed(2)}` : ''}</td>
+                    <td class="p-3 text-right font-mono text-green-600">${item.credit > 0 ? `₹${item.credit.toFixed(2)}` : ''}</td>
+                </tr>
+            `).join('');
+
+            appContent.innerHTML = `
+                <div class="print-area">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">Marketplace Ledger</h2>
+                        <button onclick="window.print()" class="bg-slate-200 px-3 py-1 rounded-md no-print">Print</button>
+                    </div>
+                     <div class="table-container bg-white rounded-lg shadow overflow-x-auto">
+                        <table class="w-full min-w-max">
+                            <thead>
+                                <tr class="border-b-2">
+                                    <th class="p-3 text-left text-sm font-semibold sortable-header" onclick="setLedgerSort('date')">Date</th>
+                                    <th class="p-3 text-left text-sm font-semibold sortable-header" onclick="setLedgerSort('description')">Particulars</th>
+                                    <th class="p-3 text-right text-sm font-semibold sortable-header" onclick="setLedgerSort('debit')">Debit (Out)</th>
+                                    <th class="p-3 text-right text-sm font-semibold sortable-header" onclick="setLedgerSort('credit')">Credit (In)</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                            <tfoot class="font-bold bg-slate-100">
+                                <tr>
+                                    <td colspan="2" class="p-3 text-right">Totals</td>
+                                    <td class="p-3 text-right font-mono text-red-700">₹${totalDebit.toFixed(2)}</td>
+                                    <td class="p-3 text-right font-mono text-green-700">₹${totalCredit.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="p-3 text-right">Net Cash Flow</td>
+                                    <td class="p-3 text-right font-mono text-lg">${(totalCredit - totalDebit) >= 0 ? `₹${(totalCredit - totalDebit).toFixed(2)}` : `-₹${Math.abs(totalCredit - totalDebit).toFixed(2)}`}</td>
+                                </tr>
+                                 <tr>
+                                    <td colspan="3" class="p-3 text-right">Net Profit (Commission - Payouts)</td>
+                                    <td class="p-3 text-right font-mono text-lg text-blue-700">${netProfit >= 0 ? `₹${netProfit.toFixed(2)}` : `-₹${Math.abs(netProfit).toFixed(2)}`}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             `;
+            updateLedgerSortIndicators();
         }
 
         function renderSupport() {
@@ -391,6 +675,7 @@
 
         function renderSettings() {
             const promoCodes = marketplaceSettings.promoCodes ? Object.values(marketplaceSettings.promoCodes) : [];
+            const promotion = marketplaceSettings.promotion || {};
 
             appContent.innerHTML = `
                 <h2 class="text-2xl font-bold mb-6">Marketplace Settings</h2>
@@ -401,11 +686,11 @@
                         <form id="commission-form" class="space-y-4">
                             <div>
                                 <label for="default-sale-commission" class="block text-sm font-medium text-gray-700">Default Sale Commission (%)</label>
-                                <input type="number" id="default-sale-commission" class="form-input mt-1" value="${marketplaceSettings.defaultSaleCommission || 10}">
+                                <input type="number" id="default-sale-commission" class="form-input mt-1 w-full" value="${marketplaceSettings.defaultSaleCommission || 10}">
                             </div>
                             <div>
                                 <label for="default-rent-commission" class="block text-sm font-medium text-gray-700">Default Rent Commission (%)</label>
-                                <input type="number" id="default-rent-commission" class="form-input mt-1" value="${marketplaceSettings.defaultRentCommission || 15}">
+                                <input type="number" id="default-rent-commission" class="form-input mt-1 w-full" value="${marketplaceSettings.defaultRentCommission || 15}">
                             </div>
                             <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Commission Settings</button>
                         </form>
@@ -459,72 +744,28 @@
                         </div>
                     </div>
                 </div>
+                <div class="bg-white p-6 rounded-lg shadow mt-8">
+                    <h3 class="text-xl font-bold mb-4">Client Portal Promotion</h3>
+                    <form id="promotion-form" class="space-y-4">
+                        <div>
+                            <label for="promotion-message" class="block text-sm font-medium text-gray-700">Popup Message</label>
+                            <textarea id="promotion-message" class="form-input mt-1 w-full" rows="4" placeholder="Enter a promotional message to show clients on the login screen.">${promotion.message || ''}</textarea>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="promotion-active" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${promotion.isActive ? 'checked' : ''}>
+                            <label for="promotion-active" class="ml-2 block text-sm text-gray-900">Show this promotion to clients</label>
+                        </div>
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Promotion</button>
+                        </div>
+                    </form>
+                </div>
             `;
             // Attach handlers
             document.getElementById('commission-form').addEventListener('submit', saveCommissionSettings);
             document.getElementById('promo-form').addEventListener('submit', savePromoCode);
+            document.getElementById('promotion-form').addEventListener('submit', savePromotionSettings);
         }
-
-        // --- TABLE HELPER ---
-        function createTable(data, headers, actions, options = {}) {
-            if (data.length === 0) return '<p class="text-center p-8 text-gray-500">No items to display.</p>';
-            
-            const grandTotals = {};
-            if (options.grandTotalCols) {
-                options.grandTotalCols.forEach(key => grandTotals[key] = 0);
-            }
-
-            const headerHtml = headers.map(h => `<th class="p-3 text-left text-sm font-semibold whitespace-nowrap sortable-header" onclick="alert('Sorting to be implemented')">${h.title}</th>`).join('');
-            
-            const bodyHtml = data.map(item => {
-                const rowData = headers.map(h => {
-                    let value = item[h.key];
-                    if (h.key.includes('.')) { // handle nested keys like item.details.price
-                        value = h.key.split('.').reduce((o, i) => o?.[i], item);
-                    }
-                    if (h.format) value = h.format(value, item);
-                    else value = value || 'N/A';
-
-                    // Update totals
-                    if (options.grandTotalCols?.includes(h.key)) {
-                        grandTotals[h.key] += parseFloat(item[h.key] || 0);
-                    } else if (options.grandTotalCols?.includes(h.key) && h.key === 'netPayout') {
-                        grandTotals.netPayout += ( (parseFloat(item.amountPaid) || 0) - (parseFloat(item.commission) || 0) );
-                    }
-
-                    return `<td class="p-3 text-sm whitespace-nowrap">${value}</td>`;
-                }).join('');
-
-                return `
-                <tr class="border-b hover:bg-gray-50">
-                    ${rowData}
-                    <td class="p-3 text-sm flex gap-2 whitespace-nowrap">
-                        ${actions.map(action => `<button class="font-semibold text-indigo-600 hover:underline" onclick="handleAction('${action.replace(/\s/g, '_')}', '${item.id}')">${action}</button>`).join('')}
-                    </td>
-                </tr>
-            `}).join('');
-            
-            const footerHtml = options.grandTotalCols ? `
-                <tfoot class="bg-slate-100 font-bold">
-                    <tr>
-                        ${headers.map(h => {
-                            if (options.grandTotalCols.includes(h.key)) {
-                                let total = grandTotals[h.key];
-                                return `<td class="p-3 text-sm text-right">₹${total.toFixed(2)}</td>`;
-                            } else if (options.grandTotalCols.includes(h.key) && h.key === 'netPayout') {
-                                let total = (grandTotals.amountPaid || 0) - (grandTotals.commission || 0);
-                                return `<td class="p-3 text-sm text-right">₹${total.toFixed(2)}</td>`;
-                            }
-                            return `<td class="p-3"></td>`;
-                        }).join('')}
-                        <td class="p-3"></td>
-                    </tr>
-                </tfoot>
-            ` : '';
-
-            return `<table class="w-full min-w-max"><thead><tr>${headerHtml}<th>Actions</th></tr></thead><tbody>${bodyHtml}</tbody>${footerHtml}</table>`;
-        }
-
 
         // --- ACTION HANDLER ---
         async function handleAction(action, id) {
@@ -543,12 +784,6 @@
                     if (transaction) await db.ref(`transactions/${id}`).remove();
                     showToast('Item deleted.');
                 }
-            } else if (action.includes('edit')) {
-                const product = products[id];
-                const transaction = transactions.find(t => t.id === id);
-                if(product) openItemEditModal(product);
-                else if(transaction) showToast('Transaction editing not implemented here.');
-                else showToast('Details not found');
             } else if (action.includes('edit_status')) {
                 const transaction = transactions.find(t => t.id === id);
                 if(transaction) openEditStatusModal(transaction);
@@ -564,6 +799,12 @@
                  if (confirm("Mark this rental as returned?")) {
                     await db.ref(`transactions/${id}`).update({ status: 'returned' });
                     showToast('Rental marked as returned.');
+                }
+            } else if (action.includes('return_deposit')) {
+                 const transaction = transactions.find(t => t.id === id);
+                 if (transaction && confirm(`Return security deposit of ₹${(transaction.securityDeposit || 0).toFixed(2)} for this rental?`)) {
+                    await db.ref(`transactions/${id}`).update({ depositStatus: 'returned' });
+                    showToast('Deposit marked as returned.');
                 }
             }
         }
@@ -594,7 +835,8 @@
         }
         window.updateTransactionStatus = updateTransactionStatus;
 
-        function openItemEditModal(product) {
+        function openItemEditModal(productId) {
+            const product = products[productId];
             const modal = document.getElementById('item-detail-modal');
             const content = document.getElementById('item-detail-content');
             
@@ -619,7 +861,6 @@
             `;
             modal.style.display = 'flex';
         }
-        window.openItemEditModal = openItemEditModal;
 
         async function saveItemChanges(productId) {
             const saleComm = document.getElementById('edit-sale-commission').value;
@@ -807,6 +1048,25 @@
                 showToast("Error saving promo code.", 4000);
             }
         }
+        
+        async function savePromotionSettings(e) {
+            e.preventDefault();
+            const message = document.getElementById('promotion-message').value.trim();
+            const isActive = document.getElementById('promotion-active').checked;
+            
+            if (isActive && !message) {
+                showToast("Please enter a message before activating the promotion.", 4000);
+                return;
+            }
+
+            try {
+                await db.ref('marketplaceSettings/promotion').set({ message, isActive });
+                showToast('Promotion settings saved!');
+            } catch(err) {
+                console.error(err);
+                showToast('Error saving promotion settings.', 4000);
+            }
+        }
 
         async function togglePromoStatus(id) {
             const promo = marketplaceSettings.promoCodes[id];
@@ -825,6 +1085,27 @@
         }
         window.deletePromo = deletePromo;
 
+        // --- Ledger Sorting ---
+        function setLedgerSort(column) {
+            if (ledgerSortState.column === column) {
+                ledgerSortState.direction = ledgerSortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                ledgerSortState.column = column;
+                ledgerSortState.direction = (column === 'date') ? 'desc' : 'asc';
+            }
+            renderPayments();
+        }
+        window.setLedgerSort = setLedgerSort;
+
+        function updateLedgerSortIndicators() {
+            appContent.querySelectorAll('.sortable-header').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.getAttribute('onclick').includes(`'${ledgerSortState.column}'`)) {
+                    th.classList.add(ledgerSortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -834,6 +1115,22 @@
 
             tabs.forEach(tab => tab.addEventListener('click', () => switchView(tab.id.replace('tab-', ''))));
             
+            // --- GLOBAL SEARCH LISTENER ---
+            const globalSearchInput = document.getElementById('global-admin-search');
+            const globalSearchResultsContainer = document.getElementById('global-search-results');
+
+            globalSearchInput.addEventListener('input', debounce((e) => {
+                const query = e.target.value.trim();
+                if (!query) {
+                    globalSearchResultsContainer.innerHTML = '';
+                    appContent.style.display = 'block'; // Show main content
+                    return;
+                }
+                const results = globalAdminSearch(query);
+                renderGlobalAdminSearchResults(results, query);
+                appContent.style.display = 'none'; // Hide main content
+            }, 300));
+
             const dataRefs = {
                 marketplaceProducts: (snap) => { products = snap.val() || {}; },
                 transactions: (snap) => { transactions = Object.values(snap.val() || {}); },
@@ -868,7 +1165,7 @@
                 db.ref(refName).on('value', snap => {
                     callback(snap);
                     const activeView = document.querySelector('.nav-button.active')?.id.replace('tab-','');
-                    if (activeView && renderFunctions[activeView]) {
+                    if (activeView && renderFunctions[activeView] && !globalSearchInput.value.trim()) {
                         renderFunctions[activeView]();
                     }
                 });
@@ -889,9 +1186,92 @@
                 }
             });
 
+            window.openItemEditModal = (id) => { openProductEditModal(id); };
+            window.openProductEditModal = openProductEditModal;
+            window.saveProductChangesFromModal = saveProductChangesFromModal;
+            window.openEditStatusModalWrapper = openEditStatusModalWrapper;
+            window.openCustomerDetailModal = openCustomerDetailModal;
 
             switchView('dashboard');
         });
+
+        // --- NEW MODAL FUNCTIONS FOR SEARCH RESULTS ---
+        function openProductEditModal(productId) {
+            const product = products[productId];
+            if (!product) {
+                showToast("Product not found");
+                return;
+            }
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+            const statuses = ['pending_approval', 'approved', 'rejected', 'sold'];
+
+            content.innerHTML = `
+                <h3 class="font-bold text-lg mb-4">Edit Product: ${product.title}</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="product-status-select" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="product-status-select" class="form-select mt-1 w-full">
+                            ${statuses.map(s => `<option value="${s}" ${s === product.status ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
+                        </select>
+                    </div>
+                     <div>
+                        <label for="product-image-url" class="block text-sm font-medium text-gray-700">Image URL (Google Drive)</label>
+                        <input type="text" id="product-image-url" class="form-input mt-1 w-full" value="${product.imageUrl || ''}">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button onclick="document.getElementById('edit-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded font-semibold">Cancel</button>
+                    <button onclick="saveProductChangesFromModal('${product.id}')" class="bg-indigo-600 text-white py-2 px-4 rounded font-semibold">Save</button>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        async function saveProductChangesFromModal(productId) {
+            const newStatus = document.getElementById('product-status-select').value;
+            const newImageUrl = document.getElementById('product-image-url').value;
+            const updates = { status: newStatus, imageUrl: newImageUrl };
+            try {
+                await db.ref(`marketplaceProducts/${productId}`).update(updates);
+                showToast('Product updated.');
+                document.getElementById('edit-modal').style.display = 'none';
+            } catch (e) {
+                showToast('Error updating product.');
+                console.error(e);
+            }
+        }
+        
+        function openCustomerDetailModal(customerMobile) {
+            const customer = customers[customerMobile];
+            if (!customer) return;
+
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+
+            const customerOrders = transactions.filter(t => t.buyerMobile === customerMobile || t.sellerMobile === customerMobile)
+                .sort((a,b) => b.timestamp - a.timestamp);
+
+            content.innerHTML = `
+                <h3 class="font-bold text-lg mb-4">Customer: ${customer.name}</h3>
+                <p class="text-sm text-gray-600">${customer.mobile}</p>
+                <h4 class="font-semibold mt-4 mb-2">Recent Transactions</h4>
+                <div class="max-h-60 overflow-y-auto border rounded-md">
+                    ${customerOrders.length > 0 ? customerOrders.map(t => `
+                        <div class="p-2 border-b">
+                            <p class="text-sm">${new Date(t.timestamp).toLocaleDateString()}: ${t.type} of ${products[t.productId]?.title || 'item'}</p>
+                            <p class="text-xs text-gray-500">Amount: ₹${(t.amountPaid || 0).toFixed(2)}</p>
+                        </div>
+                    `).join('') : '<p class="p-2 text-sm text-gray-500">No transactions found.</p>'}
+                </div>
+                <div class="flex justify-end mt-4">
+                     <button onclick="document.getElementById('edit-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded font-semibold">Close</button>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
     </script>
+
 
 <script src="./script.js"></script></body></html>
