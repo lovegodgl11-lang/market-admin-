@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Full market place "><meta charset="UTF-8">
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Market admin </title><meta name="title" content="Market admin "><meta name="description" content="Commission, promo code "><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
   "imports": {}
 }</script></head><body>
@@ -27,6 +27,7 @@
         .chat-bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; }
         .chat-bubble.sent { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
         .chat-bubble.received { background-color: #4f46e5; color: white; align-self: flex-end; }
+        .form-input, .form-select { border-color: #d1d5db; border-radius: 0.375rem; padding: 0.5rem 0.75rem; width: 100%; }
     </style>
 
 
@@ -57,6 +58,7 @@
             <button id="tab-orders" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Order Management</button>
             <button id="tab-payments" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Payment Management</button>
             <button id="tab-support" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Support &amp; Disputes</button>
+            <button id="tab-settings" class="nav-button py-3 px-4 font-semibold text-sm text-center whitespace-nowrap">Settings</button>
         </div>
 
         <main id="app-content"></main>
@@ -89,6 +91,7 @@
 
         let db;
         let products = {}, transactions = [], chats = {}, customers = {};
+        let marketplaceSettings = { defaultSaleCommission: 10, defaultRentCommission: 15, promoCodes: {} };
         let adminNotifications = [];
         let unreadAdminNotifications = 0;
         let unreadChats = new Set();
@@ -128,7 +131,8 @@
             listings: renderListings,
             orders: renderOrders,
             payments: renderPayments,
-            support: renderSupport
+            support: renderSupport,
+            settings: renderSettings
         };
 
         function switchView(viewName) {
@@ -175,7 +179,7 @@
                 { title: 'Price', key: 'price', format: val => val ? `₹${val}`: 'N/A' },
                 { title: 'Rent/Day', key: 'rentPrice', format: val => val ? `₹${val}`: 'N/A' },
             ];
-            const actions = ['Details', 'Approve', 'Reject', 'Delete'];
+            const actions = ['Edit', 'Approve', 'Reject', 'Delete'];
             appContent.innerHTML = `
                 <div>
                     <h2 class="text-2xl font-bold mb-4">Manage Listings (${productList.length})</h2>
@@ -218,7 +222,17 @@
             
             const headers = [
                 { title: 'Date', key: 'timestamp', format: ts => new Date(ts).toLocaleDateString() },
-                { title: 'Product', key: 'productId', format: pid => products[pid]?.title || 'Unknown' },
+                { title: 'Product', key: 'productId', format: (pid, item) => {
+                    const productTitle = products[pid]?.title || 'Unknown';
+                    let variantInfo = '';
+                    if (item.selectedSize || item.selectedColor) {
+                        variantInfo = ` <span class="text-xs text-gray-500">(${(item.selectedSize || '')}${(item.selectedSize && item.selectedColor) ? ', ' : ''}${(item.selectedColor || '')})</span>`;
+                    }
+                    if (item.quantity) {
+                         variantInfo += ` <span class="text-xs font-semibold">x ${item.quantity}</span>`;
+                    }
+                    return productTitle + variantInfo;
+                }},
                 { title: 'Buyer', key: 'buyerMobile', format: mob => customers[mob]?.name || mob },
                 { title: 'Seller', key: 'sellerMobile', format: mob => customers[mob]?.name || mob },
                 { title: 'Amount', key: 'amountPaid', format: val => `₹${parseFloat(val || 0).toFixed(2)}` },
@@ -236,11 +250,10 @@
                             ${saleTransactions.sort((a,b) => b.timestamp - a.timestamp).map(t => {
                                 const buyerName = customers[t.buyerMobile]?.name || t.buyerMobile;
                                 const sellerName = customers[t.sellerMobile]?.name || t.sellerMobile;
-                                const productTitle = products[t.productId]?.title || 'Unknown Item';
-
+                                
                                 return `
                                 <tr class="border-b hover:bg-gray-50">
-                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key]) : (t[h.key] || 'N/A')}</td>`).join('')}
+                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${h.format ? h.format(t[h.key], t) : (t[h.key] || 'N/A')}</td>`).join('')}
                                     <td class="p-3 text-sm flex gap-2">
                                         <button onclick="openChatModal('${t.buyerMobile}')" title="Chat Buyer" class="text-slate-500 hover:text-blue-600">${ICONS.chat}</button>
                                         <button onclick="handleAction('Edit_Status', '${t.id}')" class="text-xs font-semibold text-indigo-600 hover:underline">Edit Status</button>
@@ -293,11 +306,16 @@
                                     statusText = `Overdue by ${Math.abs(diffDays)} day(s)`;
                                     statusColor = 'text-red-600 font-bold';
                                 }
+                                
+                                let variantInfo = '';
+                                if (t.selectedSize || t.selectedColor) {
+                                    variantInfo = ` <span class="text-xs text-gray-500">(${(t.selectedSize || '')}${(t.selectedSize && t.selectedColor) ? ', ' : ''}${(t.selectedColor || '')})</span>`;
+                                }
 
                                 return `
                                 <tr class="border-b hover:bg-gray-50">
                                     <td class="p-3 text-sm">${startDate.toLocaleDateString()}</td>
-                                    <td class="p-3 text-sm">${products[t.productId]?.title || 'Unknown'}</td>
+                                    <td class="p-3 text-sm">${products[t.productId]?.title || 'Unknown'}${variantInfo}</td>
                                     <td class="p-3 text-sm">${customers[t.buyerMobile]?.name || t.buyerMobile}</td>
                                     <td class="p-3 text-sm">${t.rentalDays} day(s)</td>
                                     <td class="p-3 text-sm">${dueDate.toLocaleDateString()}</td>
@@ -325,7 +343,7 @@
                 { title: 'Net Payout', key: 'netPayout', format: (val, item) => `₹${( (parseFloat(item.amountPaid) || 0) - (parseFloat(item.commission) || 0) ).toFixed(2)}`},
                 { title: 'Status', key: 'status', format: val => `<span class="font-semibold capitalize">${(val || '').replace(/_/g, ' ')}</span>` },
             ];
-             const actions = ['Mark Paid', 'View Details'];
+             const actions = ['Mark Paid', 'Edit'];
              appContent.innerHTML = `
                 <div>
                     <h2 class="text-2xl font-bold mb-4">Payment Management</h2>
@@ -369,6 +387,82 @@
                     </div>
                 </div>
             `;
+        }
+
+        function renderSettings() {
+            const promoCodes = marketplaceSettings.promoCodes ? Object.values(marketplaceSettings.promoCodes) : [];
+
+            appContent.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Marketplace Settings</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Commission Settings -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-bold mb-4">Default Commission Rates</h3>
+                        <form id="commission-form" class="space-y-4">
+                            <div>
+                                <label for="default-sale-commission" class="block text-sm font-medium text-gray-700">Default Sale Commission (%)</label>
+                                <input type="number" id="default-sale-commission" class="form-input mt-1" value="${marketplaceSettings.defaultSaleCommission || 10}">
+                            </div>
+                            <div>
+                                <label for="default-rent-commission" class="block text-sm font-medium text-gray-700">Default Rent Commission (%)</label>
+                                <input type="number" id="default-rent-commission" class="form-input mt-1" value="${marketplaceSettings.defaultRentCommission || 15}">
+                            </div>
+                            <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Commission Settings</button>
+                        </form>
+                    </div>
+
+                    <!-- Promo Code Management -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-bold mb-4">Manage Promo Codes</h3>
+                        <form id="promo-form" class="space-y-4 border-b pb-6 mb-6">
+                            <input type="hidden" id="promo-id">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="promo-code" class="block text-sm font-medium">Code</label>
+                                    <input type="text" id="promo-code" class="form-input mt-1" placeholder="e.g., SALE10" required>
+                                </div>
+                                <div>
+                                    <label for="promo-type" class="block text-sm font-medium">Type</label>
+                                    <select id="promo-type" class="form-select mt-1">
+                                        <option value="percentage">Percentage (%)</option>
+                                        <option value="fixed">Fixed Amount (₹)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                 <div>
+                                    <label for="promo-value" class="block text-sm font-medium">Value</label>
+                                    <input type="number" id="promo-value" class="form-input mt-1" required>
+                                </div>
+                                 <div>
+                                    <label for="promo-min-order" class="block text-sm font-medium">Min. Order (₹, optional)</label>
+                                    <input type="number" id="promo-min-order" class="form-input mt-1">
+                                </div>
+                            </div>
+                            <button type="submit" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">Save Promo Code</button>
+                        </form>
+
+                        <div id="promo-list" class="space-y-2">
+                            ${promoCodes.map(promo => `
+                                <div class="flex justify-between items-center p-2 rounded ${promo.isActive ? 'bg-green-50' : 'bg-gray-100 text-gray-500'}">
+                                    <div>
+                                        <strong class="font-mono">${promo.code}</strong> - 
+                                        ${promo.discountType === 'percentage' ? `${promo.discountValue}% off` : `₹${promo.discountValue} off`}
+                                        ${promo.minOrderValue ? ` (min ₹${promo.minOrderValue})` : ''}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="togglePromoStatus('${promo.id}')" class="text-sm font-semibold ${promo.isActive ? 'text-yellow-600' : 'text-green-600'}">${promo.isActive ? 'Deactivate' : 'Activate'}</button>
+                                        <button onclick="deletePromo('${promo.id}')" class="text-sm font-semibold text-red-600">Delete</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            // Attach handlers
+            document.getElementById('commission-form').addEventListener('submit', saveCommissionSettings);
+            document.getElementById('promo-form').addEventListener('submit', savePromoCode);
         }
 
         // --- TABLE HELPER ---
@@ -449,11 +543,11 @@
                     if (transaction) await db.ref(`transactions/${id}`).remove();
                     showToast('Item deleted.');
                 }
-            } else if (action.includes('details')) {
+            } else if (action.includes('edit')) {
                 const product = products[id];
                 const transaction = transactions.find(t => t.id === id);
-                if(product) showItemDetails(product);
-                else if(transaction) showItemDetails(products[transaction.productId]);
+                if(product) openItemEditModal(product);
+                else if(transaction) showToast('Transaction editing not implemented here.');
                 else showToast('Details not found');
             } else if (action.includes('edit_status')) {
                 const transaction = transactions.find(t => t.id === id);
@@ -500,30 +594,52 @@
         }
         window.updateTransactionStatus = updateTransactionStatus;
 
-        function showItemDetails(product) {
+        function openItemEditModal(product) {
             const modal = document.getElementById('item-detail-modal');
             const content = document.getElementById('item-detail-content');
-            const imageUrl = getGoogleDriveImageUrl(product.imageUrl);
+            
             content.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <h3 class="text-xl font-bold">${product.title}</h3>
-                    <span class="text-sm font-semibold px-3 py-1 rounded-full ${product.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${product.status}</span>
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold">Edit: ${product.title}</h3>
+                    <button onclick="document.getElementById('item-detail-modal').style.display='none'" class="text-gray-500 text-2xl">&times;</button>
                 </div>
-                <img src="${imageUrl}" class="w-full h-64 object-cover my-4 rounded-lg bg-gray-100">
-                <div class="space-y-2 text-sm">
-                    <p><strong>Seller:</strong> ${product.sellerName} (${product.sellerMobile})</p>
-                    <p><strong>Listing Type:</strong> <span class="font-semibold">${product.listingType?.charAt(0).toUpperCase() + product.listingType?.slice(1)}</span></p>
-                    ${(product.listingType === 'sale' || product.listingType === 'both') ? `<p><strong>Sale Price:</strong> ₹${product.price || 'N/A'}</p>` : ''}
-                    ${(product.listingType === 'rent' || product.listingType === 'both') ? `<p><strong>Rent/Day:</strong> ₹${product.rentPrice || 'N/A'}</p>` : ''}
-                    ${(product.listingType === 'rent' || product.listingType === 'both') ? `<p><strong>Security Deposit:</strong> ₹${product.securityDeposit || 'N/A'}</p>` : ''}
-                    <p><strong>Description:</strong> ${product.description}</p>
+                <div class="space-y-4">
+                     <div>
+                        <label class="block text-sm font-medium">Sale Commission (%)</label>
+                        <input type="number" id="edit-sale-commission" class="form-input mt-1" value="${product.saleCommissionPercentage || ''}" placeholder="Default (${marketplaceSettings.defaultSaleCommission || 10}%)">
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium">Rent Commission (%)</label>
+                        <input type="number" id="edit-rent-commission" class="form-input mt-1" value="${product.rentCommissionPercentage || ''}" placeholder="Default (${marketplaceSettings.defaultRentCommission || 15}%)">
+                    </div>
                 </div>
                 <div class="text-right mt-6">
-                    <button onclick="document.getElementById('item-detail-modal').style.display='none'" class="bg-gray-200 py-2 px-4 rounded-lg font-semibold">Close</button>
+                    <button onclick="saveItemChanges('${product.id}')" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg">Save Changes</button>
                 </div>
             `;
             modal.style.display = 'flex';
         }
+        window.openItemEditModal = openItemEditModal;
+
+        async function saveItemChanges(productId) {
+            const saleComm = document.getElementById('edit-sale-commission').value;
+            const rentComm = document.getElementById('edit-rent-commission').value;
+
+            const updates = {
+                saleCommissionPercentage: saleComm ? parseFloat(saleComm) : null,
+                rentCommissionPercentage: rentComm ? parseFloat(rentComm) : null
+            };
+
+            try {
+                await db.ref(`marketplaceProducts/${productId}`).update(updates);
+                showToast("Product commissions updated!");
+                document.getElementById('item-detail-modal').style.display = 'none';
+            } catch (error) {
+                showToast("Error saving changes.", 4000);
+                console.error(error);
+            }
+        }
+        window.saveItemChanges = saveItemChanges;
 
         // --- NOTIFICATIONS & CHAT ---
         function updateAdminNotificationBadge() {
@@ -651,6 +767,64 @@
              modal.style.display = 'flex';
         }
 
+        // --- Settings Page Logic ---
+        async function saveCommissionSettings(e) {
+            e.preventDefault();
+            const saleComm = document.getElementById('default-sale-commission').value;
+            const rentComm = document.getElementById('default-rent-commission').value;
+            try {
+                await db.ref('marketplaceSettings').update({
+                    defaultSaleCommission: parseFloat(saleComm),
+                    defaultRentCommission: parseFloat(rentComm)
+                });
+                showToast("Default commissions saved!");
+            } catch (error) {
+                showToast("Error saving settings.", 4000);
+            }
+        }
+
+        async function savePromoCode(e) {
+            e.preventDefault();
+            const id = document.getElementById('promo-id').value || Date.now();
+            const code = document.getElementById('promo-code').value.toUpperCase().trim();
+            if (!code) {
+                showToast("Promo code cannot be empty.");
+                return;
+            }
+            const promo = {
+                id: id.toString(),
+                code: code,
+                discountType: document.getElementById('promo-type').value,
+                discountValue: parseFloat(document.getElementById('promo-value').value) || 0,
+                minOrderValue: parseFloat(document.getElementById('promo-min-order').value) || null,
+                isActive: true
+            };
+            try {
+                await db.ref('marketplaceSettings/promoCodes/' + promo.id).set(promo);
+                showToast("Promo code saved!");
+                e.target.reset();
+            } catch (error) {
+                showToast("Error saving promo code.", 4000);
+            }
+        }
+
+        async function togglePromoStatus(id) {
+            const promo = marketplaceSettings.promoCodes[id];
+            if (promo) {
+                await db.ref(`marketplaceSettings/promoCodes/${id}/isActive`).set(!promo.isActive);
+                showToast(`Promo code ${!promo.isActive ? 'activated' : 'deactivated'}.`);
+            }
+        }
+        window.togglePromoStatus = togglePromoStatus;
+
+        async function deletePromo(id) {
+            if (confirm("Are you sure you want to delete this promo code?")) {
+                await db.ref(`marketplaceSettings/promoCodes/${id}`).remove();
+                showToast("Promo code deleted.");
+            }
+        }
+        window.deletePromo = deletePromo;
+
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -684,6 +858,9 @@
                         }
                     });
                     updateAdminChatBadge();
+                },
+                marketplaceSettings: (snap) => {
+                    marketplaceSettings = snap.val() || { defaultSaleCommission: 10, defaultRentCommission: 15, promoCodes: {} };
                 }
             };
             
@@ -716,6 +893,5 @@
             switchView('dashboard');
         });
     </script>
-
 
 <script src="./script.js"></script></body></html>
